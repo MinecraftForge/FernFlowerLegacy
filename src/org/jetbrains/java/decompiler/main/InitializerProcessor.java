@@ -29,7 +29,10 @@ import org.jetbrains.java.decompiler.struct.StructField;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 
 public class InitializerProcessor {
@@ -124,13 +127,13 @@ public class InitializerProcessor {
 
     RootStatement root = meth.root;
     StructClass cl = wrapper.getClassStruct();
+    Set<String> whitelist = new HashSet<String>();
 
     Statement firstdata = findFirstData(root);
     if (firstdata != null) {
-      while (!firstdata.getExprents().isEmpty()) {
-        Exprent exprent = firstdata.getExprents().get(0);
-
-        boolean found = false;
+      Iterator<Exprent> itr = firstdata.getExprents().iterator();
+      while (itr.hasNext()) {
+        Exprent exprent = itr.next();
 
         if (exprent.type == Exprent.EXPRENT_ASSIGNMENT) {
           AssignmentExprent asexpr = (AssignmentExprent)exprent;
@@ -139,21 +142,17 @@ public class InitializerProcessor {
             if (fexpr.isStatic() && fexpr.getClassname().equals(cl.qualifiedName) &&
                 cl.hasField(fexpr.getName(), fexpr.getDescriptor().descriptorString)) {
 
-              if (isExprentIndependent(asexpr.getRight(), meth)) {
+              if (isExprentIndependent(asexpr.getRight(), meth, cl, whitelist)) {
 
                 String keyField = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
                 if (!wrapper.getStaticFieldInitializers().containsKey(keyField)) {
                   wrapper.getStaticFieldInitializers().addWithKey(asexpr.getRight(), keyField);
-                  firstdata.getExprents().remove(0);
-                  found = true;
+                  whitelist.add(keyField);
+                  itr.remove();
                 }
               }
             }
           }
-        }
-
-        if (!found) {
-          break;
         }
       }
     }
@@ -191,6 +190,8 @@ public class InitializerProcessor {
       return;
     }
 
+    Set<String> whitelist = new HashSet<String>();
+
     while (true) {
 
       String fieldWithDescr = null;
@@ -216,7 +217,7 @@ public class InitializerProcessor {
                 cl.hasField(fexpr.getName(), fexpr
                   .getDescriptor().descriptorString)) { // check for the physical existence of the field. Could be defined in a superclass.
 
-              if (isExprentIndependent(asexpr.getRight(), lstMethWrappers.get(i))) {
+              if (isExprentIndependent(asexpr.getRight(), lstMethWrappers.get(i), cl, whitelist)) {
                 String fieldKey = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
                 if (fieldWithDescr == null) {
                   fieldWithDescr = fieldKey;
@@ -252,7 +253,7 @@ public class InitializerProcessor {
     }
   }
 
-  private static boolean isExprentIndependent(Exprent exprent, MethodWrapper meth) {
+  private static boolean isExprentIndependent(Exprent exprent, MethodWrapper meth, StructClass cl, Set<String> whitelist) {
 
     List<Exprent> lst = exprent.getAllExprents(true);
     lst.add(exprent);
@@ -270,7 +271,15 @@ public class InitializerProcessor {
           }
           break;
         case Exprent.EXPRENT_FIELD:
-          return false;
+          FieldExprent fexpr = (FieldExprent)expr;
+          if (cl.qualifiedName.equals(fexpr.getClassname())) {
+            if (!whitelist.contains(InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString))) {
+              return false;
+            }
+          }
+          else if (!fexpr.isStatic()) {
+            return false;
+          }
       }
     }
 
