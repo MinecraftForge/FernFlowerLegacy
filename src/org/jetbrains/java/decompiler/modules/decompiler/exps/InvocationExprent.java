@@ -321,7 +321,7 @@ public class InvocationExprent extends Exprent {
     boolean firstParameter = true;
     int start = isEnum ? 2 : 0;
     for (int i = start; i < lstParameters.size(); i++) {
-      if (sigFields == null) {
+      if (sigFields == null || sigFields.get(i) == null) {
         if (!firstParameter) {
           buf.append(", ");
         }
@@ -495,16 +495,16 @@ public class InvocationExprent extends Exprent {
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public boolean match(MatchNode matchNode, MatchEngine engine) {
 
     if(!super.match(matchNode, engine)) {
       return false;
     }
-    
+
     for(Entry<MatchProperties, RuleValue> rule : matchNode.getRules().entrySet()) {
       RuleValue value = rule.getValue();
-      
+
       switch(rule.getKey()) {
       case EXPRENT_INVOCATION_PARAMETER:
         if(value.isVariable()) {
@@ -528,9 +528,9 @@ public class InvocationExprent extends Exprent {
         }
         break;
       }
-      
+
     }
-    
+
     return true;
   }
 
