@@ -1,0 +1,90 @@
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'java'
+
+version = "1.0"
+group = "net.minecraftforge" //not sure if we shoulkd publish under this name, but it's our fork so meh
+archivesBaseName = "fernflower"
+
+sourceCompatibility = '1.6'
+targetCompatibility = '1.6'
+
+sourceSets {
+    main.java.srcDirs = ['src']
+    test.java.srcDirs = ['test']
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    deployerJars
+}
+
+dependencies {
+    testCompile "junit:junit:4.12"
+    testCompile 'org.hamcrest:hamcrest-core:1.3'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
+
+    // maven deployment
+    deployerJars "org.apache.maven.wagon:wagon-ssh:2.2"
+}
+
+compileJava.options.encoding = "utf-8"
+compileJava.options.deprecation = true
+
+jar.manifest {
+    attributes "Main-Class" : "org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler"
+}
+
+uploadArchives {
+    repositories {
+        add getProject().repositories.mavenLocal()
+    }
+    repositories.mavenDeployer {
+        configuration = configurations.deployerJars
+
+        if (project.hasProperty("filesmaven")) {
+            logger.info('Publishing to files server')
+            repository(url: project.filesmaven.url) {
+                authentication(userName: project.filesmaven.username, privateKey: project.filesmaven.key)
+            }
+        } else {
+            logger.info('Publishing to repo folder')
+            repository(url: 'file://localhost/' + project.file('repo').getAbsolutePath())
+        }
+
+        pom {
+            groupId = project.group
+            version = project.version
+            artifactId = project.archivesBaseName
+            project {
+                name project.archivesBaseName
+                packaging 'jar'
+                description 'Fernflower from https://github.com/JetBrains/intellij-community as standalone library'
+                url 'https://github.com/MinecraftForge/FernFlower'
+
+                scm {
+                    url 'https://github.com/MinecraftForge/FernFlower'
+                    connection 'scm:git:git://github.com/MinecraftForge/FernFlower.git'
+                    developerConnection 'scm:git:git@github.com:MinecraftForge/FernFlower.git'
+                }
+
+                issueManagement {
+                    system 'github'
+                    url 'https://github.com/MinecraftForge/FernFlower/issues'
+                }
+
+                licenses {
+                    license {
+                        name 'Apache License 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0'
+                        distribution 'repo'
+                    }
+                }
+            }
+        }
+    }
+}
