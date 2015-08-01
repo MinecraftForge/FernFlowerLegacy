@@ -26,7 +26,10 @@ import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.CheckTypesResult;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.StructClass;
+import org.jetbrains.java.decompiler.struct.attr.StructGenericSignatureAttribute;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericClassDescriptor;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 import org.jetbrains.java.decompiler.util.ListStack;
 
@@ -232,6 +235,20 @@ public class NewExprent extends Exprent {
           }
           else {
             typename = typename.substring(typename.lastIndexOf('.') + 1);
+          }
+        }
+
+        if (DecompilerContext.getOption(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES)) {
+          StructGenericSignatureAttribute attr = (StructGenericSignatureAttribute)child.getWrapper().getClassStruct().getAttributes().getWithKey("Signature");
+          if (attr != null) {
+              GenericClassDescriptor descriptor = GenericMain.parseClassSignature(attr.getSignature());
+              // Anon classes can only be a child to one type. So either the first interface or the super class
+              if (descriptor.superinterfaces.size() > 0) {
+                  typename = GenericMain.getGenericCastTypeName(descriptor.superinterfaces.get(0));
+              }
+              else {
+                  typename = GenericMain.getGenericCastTypeName(descriptor.superclass);
+              }
           }
         }
         buf.prepend("new " + typename);
