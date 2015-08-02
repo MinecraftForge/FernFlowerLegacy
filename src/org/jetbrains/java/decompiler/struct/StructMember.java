@@ -57,9 +57,9 @@ public class StructMember {
       StructGeneralAttribute attribute = readAttribute(in, pool, name);
 
       if (attribute != null) {
-        if (StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE.equals(name) && attributes.containsKey(name)) {
+        if ((StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE.equals(name) || StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE.equals(name)) && attributes.containsKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE)) {
           // merge all variable tables
-          StructLocalVariableTableAttribute table = (StructLocalVariableTableAttribute)attributes.getWithKey(name);
+          StructLocalVariableTableAttribute table = (StructLocalVariableTableAttribute)attributes.getWithKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
           table.addLocalVariableTable((StructLocalVariableTableAttribute)attribute);
         }
         else {
