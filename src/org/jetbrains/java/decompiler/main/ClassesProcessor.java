@@ -228,6 +228,7 @@ public class ClassesProcessor {
                 stack.add(nestedClass);
               }
             }
+            Collections.sort(superNode.nested);
           }
         }
       }
@@ -342,7 +343,7 @@ public class ClassesProcessor {
   }
 
 
-  public static class ClassNode {
+  public static class ClassNode implements Comparable<ClassNode> {
 
     public static final int CLASS_ROOT = 0;
     public static final int CLASS_MEMBER = 1;
@@ -440,6 +441,12 @@ public class ClassesProcessor {
 
       public boolean is_method_reference;
       public boolean is_content_method_static;
+    }
+
+    @Override
+    public int compareTo(ClassNode o)
+    {
+        return this.classStruct.qualifiedName.compareTo(o.classStruct.qualifiedName);
     }
   }
 }
