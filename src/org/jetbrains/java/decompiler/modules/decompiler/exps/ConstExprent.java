@@ -210,7 +210,7 @@ public class ConstExprent extends Exprent {
             doublefield = "MIN_VALUE";
           }
           else {
-            return new TextBuffer(value.toString()).append("D");
+            return new TextBuffer(trimZeros(value.toString())).append("D");
           }
           return new FieldExprent(doublefield, "java/lang/Double", true, null, FieldDescriptor.DOUBLE_DESCRIPTOR, bytecode).toJava(0, tracer);
         case CodeConstants.TYPE_FLOAT:
@@ -247,7 +247,7 @@ public class ConstExprent extends Exprent {
             floatfield = "MIN_VALUE";
           }
           else {
-            return new TextBuffer(value.toString()).append("F");
+            return new TextBuffer(trimZeros(value.toString())).append("F");
           }
           return new FieldExprent(floatfield, "java/lang/Float", true, null, FieldDescriptor.FLOAT_DESCRIPTOR, bytecode).toJava(0, tracer);
         case CodeConstants.TYPE_NULL:
@@ -273,6 +273,16 @@ public class ConstExprent extends Exprent {
     }
 
     throw new RuntimeException("invalid constant type");
+  }
+
+  private static String trimZeros(String value) {
+      int i = value.length() - 1;
+      while (i >= 0 && value.charAt(i) == '0') {
+          i--;
+      }
+      if (value.charAt(i) == '.')
+        i++;
+      return value.substring(0, i + 1);
   }
 
   private static String convertStringToJava(String value, boolean ascii) {
@@ -400,20 +410,20 @@ public class ConstExprent extends Exprent {
   public boolean isBoolPermitted() {
     return boolPermitted;
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public boolean match(MatchNode matchNode, MatchEngine engine) {
 
     if(!super.match(matchNode, engine)) {
       return false;
     }
-    
+
     for(Entry<MatchProperties, RuleValue> rule : matchNode.getRules().entrySet()) {
       RuleValue rule_value = rule.getValue();
-      
+
       switch(rule.getKey()) {
       case EXPRENT_CONSTTYPE:
         if(!rule_value.value.equals(this.constType)) {
@@ -425,12 +435,12 @@ public class ConstExprent extends Exprent {
           if(!engine.checkAndSetVariableValue(rule_value.value.toString(), this.value)) {
             return false;
           }
-        } 
+        }
         break;
       }
     }
-    
+
     return true;
   }
-  
+
 }
