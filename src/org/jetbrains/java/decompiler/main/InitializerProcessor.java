@@ -25,7 +25,11 @@ import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.StructClass;
+import org.jetbrains.java.decompiler.struct.StructContext;
 import org.jetbrains.java.decompiler.struct.StructField;
+import org.jetbrains.java.decompiler.struct.StructMethod;
+import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
+import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.util.ArrayList;
@@ -329,5 +333,29 @@ public class InitializerProcessor {
     }
 
     return false;
+  }
+
+
+  public static void hideInitalizers(ClassWrapper wrapper) {
+    // hide initializers with anon class arguments
+    for (MethodWrapper method : wrapper.getMethods()) {
+      StructMethod mt = method.methodStruct;
+      String name = mt.getName();
+      String desc = mt.getDescriptor();
+
+      if (mt.isSynthetic() && CodeConstants.INIT_NAME.equals(name)) {
+        MethodDescriptor md = MethodDescriptor.parseDescriptor(desc);
+        if (md.params.length > 0) {
+          VarType type = md.params[md.params.length - 1];
+          if (type.type == CodeConstants.TYPE_OBJECT) {
+            ClassNode node = DecompilerContext.getClassProcessor().getMapRootClasses().get(type.value);
+            if (node != null && (node.namelessConstructorStub || node.type == ClassNode.CLASS_ANONYMOUS)) {
+              //TODO: Verify that the body is JUST a this([args]) call?
+              wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, desc));
+            }
+          }
+        }
+      }
+    }
   }
 }
