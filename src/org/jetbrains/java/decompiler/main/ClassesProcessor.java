@@ -31,7 +31,10 @@ import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructContext;
 import org.jetbrains.java.decompiler.struct.StructMethod;
+import org.jetbrains.java.decompiler.struct.attr.StructEnclosingMethodAttribute;
+import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
 import org.jetbrains.java.decompiler.struct.attr.StructInnerClassesAttribute;
+import org.jetbrains.java.decompiler.struct.attr.StructInnerClassesAttribute.InnerClassInfo;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
@@ -62,18 +65,37 @@ public class ClassesProcessor {
           StructInnerClassesAttribute inner = (StructInnerClassesAttribute)cl.getAttributes().getWithKey("InnerClasses");
           if (inner != null) {
 
-            for (int i = 0; i < inner.getClassEntries().size(); i++) {
-
-              int[] entry = inner.getClassEntries().get(i);
-              String[] strEntry = inner.getStringEntries().get(i);
+            for (InnerClassInfo entry : inner.getEntries()) {
               Object[] arr = new Object[4]; // arr[0] not used
-              String innerName = strEntry[0];
+              String innerName = entry.inner_class;
 
               // nested class type
-              arr[2] = entry[1] == 0 ? (entry[2] == 0 ? ClassNode.CLASS_ANONYMOUS : ClassNode.CLASS_LOCAL) : ClassNode.CLASS_MEMBER;
+              if (entry.inner_class != null) {
+                if (entry.inner_name == null) {
+                  arr[2] = ClassNode.CLASS_ANONYMOUS;
+                }
+                else {
+                  StructClass in = context.getClass(entry.inner_class);
+                  if (in == null) { // A referenced library that was not added to the context, make assumptions
+                    arr[2] = ClassNode.CLASS_MEMBER;
+                  }
+                  else {
+                    StructEnclosingMethodAttribute attr = (StructEnclosingMethodAttribute)in.getAttributes().getWithKey("EnclosingMethod");
+                    if (attr != null && attr.getMethodName() != null) {
+                      arr[2] = ClassNode.CLASS_LOCAL;
+                    }
+                    else {
+                      arr[2] = ClassNode.CLASS_MEMBER;
+                    }
+                  }
+                }
+              }
+              else { // This should never happen as inner_class and outer_class are NOT optional, make assumptions
+                arr[2] = ClassNode.CLASS_MEMBER;
+              }
 
               // original simple name
-              String simpleName = strEntry[2];
+              String simpleName = entry.inner_name;
               String savedName = mapNewSimpleNames.get(innerName);
 
               if (savedName != null) {
@@ -90,12 +112,12 @@ public class ClassesProcessor {
               arr[1] = simpleName;
 
               // original access flags
-              arr[3] = entry[3];
+              arr[3] = entry.access;
 
               // enclosing class
               String enclClassName;
-              if (entry[1] != 0) {
-                enclClassName = strEntry[1];
+              if (entry.outer_class != null) {
+                enclClassName = entry.outer_class;
               }
               else {
                 enclClassName = cl.qualifiedName;
@@ -163,13 +185,13 @@ public class ClassesProcessor {
               StructClass scl = superNode.classStruct;
               StructInnerClassesAttribute inner = (StructInnerClassesAttribute)scl.getAttributes().getWithKey("InnerClasses");
 
-              if (inner == null || inner.getStringEntries().isEmpty()) {
+              if (inner == null || inner.getEntries().isEmpty()) {
                 DecompilerContext.getLogger().writeMessage(superClass + " does not contain inner classes!", IFernflowerLogger.Severity.WARN);
                 continue;
               }
 
-              for (int i = 0; i < inner.getStringEntries().size(); i++) {
-                String nestedClass = inner.getStringEntries().get(i)[0];
+              for (InnerClassInfo info : inner.getEntries()) {
+                String nestedClass = info.inner_class;
                 if (!setNestedClasses.contains(nestedClass)) {
                   continue;
                 }
