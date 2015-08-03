@@ -142,9 +142,8 @@ public class InitializerProcessor {
             if (fexpr.isStatic() && fexpr.getClassname().equals(cl.qualifiedName) &&
                 cl.hasField(fexpr.getName(), fexpr.getDescriptor().descriptorString)) {
 
-              if (isExprentIndependent(asexpr.getRight(), meth, cl, whitelist)) {
-
-                String keyField = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
+              String keyField = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
+              if (isExprentIndependent(asexpr.getRight(), meth, cl, whitelist, cl.getFields().getIndexByKey(keyField))) {
                 if (!wrapper.getStaticFieldInitializers().containsKey(keyField)) {
                   wrapper.getStaticFieldInitializers().addWithKey(asexpr.getRight(), keyField);
                   whitelist.add(keyField);
@@ -217,8 +216,8 @@ public class InitializerProcessor {
                 cl.hasField(fexpr.getName(), fexpr
                   .getDescriptor().descriptorString)) { // check for the physical existence of the field. Could be defined in a superclass.
 
-              if (isExprentIndependent(asexpr.getRight(), lstMethWrappers.get(i), cl, whitelist)) {
-                String fieldKey = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
+              String fieldKey = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
+              if (isExprentIndependent(asexpr.getRight(), lstMethWrappers.get(i), cl, whitelist, cl.getFields().getIndexByKey(fieldKey))) {
                 if (fieldWithDescr == null) {
                   fieldWithDescr = fieldKey;
                   value = asexpr.getRight();
@@ -253,7 +252,7 @@ public class InitializerProcessor {
     }
   }
 
-  private static boolean isExprentIndependent(Exprent exprent, MethodWrapper meth, StructClass cl, Set<String> whitelist) {
+  private static boolean isExprentIndependent(Exprent exprent, MethodWrapper meth, StructClass cl, Set<String> whitelist, int fidx) {
 
     List<Exprent> lst = exprent.getAllExprents(true);
     lst.add(exprent);
@@ -273,9 +272,11 @@ public class InitializerProcessor {
         case Exprent.EXPRENT_FIELD:
           FieldExprent fexpr = (FieldExprent)expr;
           if (cl.qualifiedName.equals(fexpr.getClassname())) {
-            if (!whitelist.contains(InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString))) {
+            String key = InterpreterUtil.makeUniqueKey(fexpr.getName(), fexpr.getDescriptor().descriptorString);
+            if (!whitelist.contains(key)) {
               return false;
             }
+            return cl.getFields().getIndexByKey(key) < fidx;
           }
           else if (!fexpr.isStatic()) {
             return false;
