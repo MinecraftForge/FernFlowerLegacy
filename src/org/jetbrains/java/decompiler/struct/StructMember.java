@@ -62,6 +62,15 @@ public class StructMember {
           StructLocalVariableTableAttribute table = (StructLocalVariableTableAttribute)attributes.getWithKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
           table.addLocalVariableTable((StructLocalVariableTableAttribute)attribute);
         }
+        else if (StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE.equals(name) && attributes.containsKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE)) {
+            StructLocalVariableTableAttribute lvtt = (StructLocalVariableTableAttribute)attributes.getWithKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE);
+            ((StructLocalVariableTableAttribute)attribute).addLocalVariableTable(lvtt);
+            attributes.addWithKey(attribute, attribute.getName());
+        }
+        else if (StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE.equals(name) && attributes.containsKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE)) {
+            StructLocalVariableTableAttribute table = (StructLocalVariableTableAttribute)attributes.getWithKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE);
+            table.addLocalVariableTable((StructLocalVariableTableAttribute)attribute);
+        }
         else {
           attributes.addWithKey(attribute, attribute.getName());
         }
