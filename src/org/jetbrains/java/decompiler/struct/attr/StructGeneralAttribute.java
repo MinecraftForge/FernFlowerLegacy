@@ -42,6 +42,7 @@ public class StructGeneralAttribute {
   public static final String ATTRIBUTE_RUNTIME_VISIBLE_TYPE_ANNOTATIONS = "RuntimeVisibleTypeAnnotations";
   public static final String ATTRIBUTE_RUNTIME_INVISIBLE_TYPE_ANNOTATIONS = "RuntimeInvisibleTypeAnnotations";
   public static final String ATTRIBUTE_LOCAL_VARIABLE_TABLE = "LocalVariableTable";
+  public static final String ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE = "LocalVariableTypeTable";
   public static final String ATTRIBUTE_CONSTANT_VALUE = "ConstantValue";
   public static final String ATTRIBUTE_BOOTSTRAP_METHODS = "BootstrapMethods";
   public static final String ATTRIBUTE_SYNTHETIC = "Synthetic";
@@ -85,7 +86,7 @@ public class StructGeneralAttribute {
              ATTRIBUTE_RUNTIME_INVISIBLE_TYPE_ANNOTATIONS.equals(name)) {
       attr = new StructAnnotationTypeAttribute();
     }
-    else if (ATTRIBUTE_LOCAL_VARIABLE_TABLE.equals(name)) {
+    else if (ATTRIBUTE_LOCAL_VARIABLE_TABLE.equals(name) || ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE.equals(name)) {
       attr = new StructLocalVariableTableAttribute();
     }
     else if (ATTRIBUTE_BOOTSTRAP_METHODS.equals(name)) {
