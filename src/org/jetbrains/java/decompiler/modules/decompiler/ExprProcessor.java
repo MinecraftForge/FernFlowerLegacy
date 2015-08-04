@@ -833,6 +833,7 @@ public class ExprProcessor implements CodeConstants {
     }
 
     TextBuffer buf = new TextBuffer();
+    lst = Exprent.sortIndexed(lst);
 
     for (Exprent expr : lst) {
       TextBuffer content = expr.toJava(indent, tracer);

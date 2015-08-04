@@ -17,6 +17,8 @@ package org.jetbrains.java.decompiler.modules.decompiler.exps;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -140,23 +142,23 @@ public class Exprent implements IMatchable {
       }
     }
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public IMatchable findObject(MatchNode matchNode, int index) {
-    
+
     if(matchNode.getType() != MatchNode.MATCHNODE_EXPRENT) {
       return null;
     }
 
     List<Exprent> lstAllExprents = getAllExprents();
-    
+
     if(lstAllExprents == null || lstAllExprents.isEmpty()) {
       return null;
     }
-    
+
     String position = (String)matchNode.getRuleValue(MatchProperties.EXPRENT_POSITION);
     if(position != null) {
       if(position.matches("-?\\d+")) {
@@ -170,11 +172,11 @@ public class Exprent implements IMatchable {
   }
 
   public boolean match(MatchNode matchNode, MatchEngine engine) {
-    
+
     if(matchNode.getType() != MatchNode.MATCHNODE_EXPRENT) {
       return false;
     }
-    
+
     for(Entry<MatchProperties, RuleValue> rule : matchNode.getRules().entrySet()) {
       switch(rule.getKey()) {
       case EXPRENT_TYPE:
@@ -188,10 +190,41 @@ public class Exprent implements IMatchable {
         }
         break;
       }
-      
+
     }
-    
+
     return true;
   }
-  
+
+  public static List<Exprent> sortIndexed(List<Exprent> lst) {
+    List<Exprent> ret = new ArrayList<Exprent>();
+    List<VarExprent> defs = new ArrayList<VarExprent>();
+
+    Comparator<VarExprent> comp = new Comparator<VarExprent>() {
+      public int compare(VarExprent o1, VarExprent o2) {
+        return o1.getIndex() - o2.getIndex();
+      }
+    };
+
+    for (Exprent exp : lst) {
+      boolean isDef = exp instanceof VarExprent && ((VarExprent)exp).isDefinition();
+      if (!isDef) {
+        if (defs.size() > 0) {
+          Collections.sort(defs, comp);
+          ret.addAll(defs);
+          defs.clear();
+        }
+        ret.add(exp);
+      }
+      else {
+        defs.add((VarExprent)exp);
+      }
+    }
+
+    if (defs.size() > 0) {
+      Collections.sort(defs, comp);
+      ret.addAll(defs);
+    }
+    return ret;
+  }
 }
