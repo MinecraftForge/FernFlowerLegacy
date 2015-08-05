@@ -31,6 +31,7 @@ public class VarProcessor {
   private VarVersionsProcessor varVersions;
   private final Map<VarVersionPair, String> thisVars = new HashMap<VarVersionPair, String>();
   private final Set<VarVersionPair> externalVars = new HashSet<VarVersionPair>();
+private LocalVariableTable lvt;
 
   public void setVarVersions(RootStatement root) {
     varVersions = new VarVersionsProcessor();
@@ -118,4 +119,15 @@ public class VarProcessor {
   public Set<VarVersionPair> getExternalVars() {
     return externalVars;
   }
+
+public void setLVT(LocalVariableTable lvt) {
+    this.lvt = lvt;
+}
+    public LVTVariable findLVT(Integer idx, List<Integer> instructionOffset) {
+        if (this.lvt != null) return lvt.find(idx, instructionOffset);
+        return null;
+    }
+    public VarProcessor() {
+
+    }
 }

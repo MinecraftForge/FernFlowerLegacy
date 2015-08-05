@@ -22,6 +22,7 @@ import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.TextBuffer;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.LVTVariable;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarTypeProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
@@ -47,6 +48,7 @@ public class VarExprent extends Exprent {
   private int version = 0;
   private boolean classDef = false;
   private boolean stack = false;
+private LVTVariable lvt;
 
   public VarExprent(int index, VarType varType, VarProcessor processor) {
     super(EXPRENT_VAR);
@@ -93,6 +95,9 @@ public class VarExprent extends Exprent {
     }
     else {
       String name = null;
+      if (lvt != null) {
+          name = lvt.name;
+      } else
       if (processor != null) {
         name = processor.getVarName(new VarVersionPair(index, version));
       }
@@ -184,31 +189,35 @@ public class VarExprent extends Exprent {
   public void setStack(boolean stack) {
     this.stack = stack;
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public boolean match(MatchNode matchNode, MatchEngine engine) {
 
     if(!super.match(matchNode, engine)) {
       return false;
     }
-    
+
     RuleValue rule = matchNode.getRules().get(MatchProperties.EXPRENT_VAR_INDEX);
     if(rule != null) {
       if(rule.isVariable()) {
         if(!engine.checkAndSetVariableValue((String)rule.value, this.index)) {
           return false;
         }
-      } else { 
+      } else {
         if(this.index != Integer.valueOf((String)rule.value).intValue()) {
           return false;
         }
       }
     }
-    
+
     return true;
   }
-  
+
+public void setLVTVariable(LVTVariable lvt) {
+    this.lvt = lvt;
+}
+
 }

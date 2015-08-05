@@ -29,6 +29,8 @@ import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructMethod;
+import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
+import org.jetbrains.java.decompiler.struct.attr.StructLocalVariableTableAttribute;
 
 import java.io.IOException;
 
@@ -82,6 +84,17 @@ public class MethodProcessorRunnable implements Runnable {
     boolean isInitializer = CodeConstants.CLINIT_NAME.equals(mt.getName()); // for now static initializer only
 
     mt.expandData();
+    // if debug information present and should be used
+    if (DecompilerContext.getOption(IFernflowerPreferences.USE_DEBUG_VAR_NAMES)) {
+      StructLocalVariableTableAttribute attr = (StructLocalVariableTableAttribute)mt.getAttributes().getWithKey(
+        StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
+
+      if (attr != null) {
+        varProc.setDebugVarNames(attr.getMapVarNames());
+        varProc.setLVT(attr.getLVT());
+      }
+    }
+
     InstructionSequence seq = mt.getInstructionSequence();
     ControlFlowGraph graph = new ControlFlowGraph(seq);
 
@@ -138,7 +151,7 @@ public class MethodProcessorRunnable implements Runnable {
     proc.processStatement(root, cl);
 
     SequenceHelper.condenseSequences(root);
-    
+
     while (true) {
       StackVarsProcessor stackProc = new StackVarsProcessor();
       stackProc.simplifyStackVars(root, mt, cl);

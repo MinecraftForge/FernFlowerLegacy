@@ -163,16 +163,6 @@ public class ClassWrapper {
       // rename vars so that no one has the same name as a field
       varProc.refreshVarNames(new VarNamesCollector(setFieldNames));
 
-      // if debug information present and should be used
-      if (DecompilerContext.getOption(IFernflowerPreferences.USE_DEBUG_VAR_NAMES)) {
-        StructLocalVariableTableAttribute attr = (StructLocalVariableTableAttribute)mt.getAttributes().getWithKey(
-          StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
-
-        if (attr != null) {
-          varProc.setDebugVarNames(attr.getMapVarNames());
-        }
-      }
-
       DecompilerContext.getLogger().endMethod();
     }
 

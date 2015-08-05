@@ -15,6 +15,8 @@
  */
 package org.jetbrains.java.decompiler.struct.attr;
 
+import org.jetbrains.java.decompiler.modules.decompiler.vars.LVTVariable;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.LocalVariableTable;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 
@@ -22,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,59 +41,9 @@ import java.util.Set;
 */
 public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
 
-  public static class LVTVariable implements Comparable<LVTVariable> {
-      public final String name;
-      public final int start;
-      public final int end;
-      public final int index;
-      private String desc;
-      private String sig;
-      private boolean isLVTT;
-      LVTVariable(String name, String desc, int start, int end, int index, boolean isLVTT) {
-          this.name = name;
-          this.desc = desc;
-          this.start = start;
-          this.end = end;
-          this.index = index;
-          this.isLVTT = isLVTT;
-      }
-
-    void merge(LVTVariable other) {
-        if (other.isLVTT && this.sig == null) {
-            this.sig = other.desc;
-        }
-    }
-    @Override
-    public boolean equals(Object obj) {
-        return ((LVTVariable) obj).index == index && ((LVTVariable) obj).end == end;
-    }
-    @Override
-    public int hashCode() {
-        return index * 31 + end;
-    }
-
-    public void addTo(Map<Integer, Set<LVTVariable>> endpoints) {
-        Set<LVTVariable> ends = endpoints.get(this.end);
-        if (ends == null) {
-            ends = new HashSet<LVTVariable>();
-            endpoints.put(this.end, ends);
-        }
-        ends.add(this);
-    }
-
-    @Override
-    public int compareTo(LVTVariable o) {
-        if (o.end > end) return -1;
-        if (o.end < end) return 1;
-        if (o.index > index) return -1;
-        if (o.index < index) return 1;
-        return 0;
-    }
-  }
   private Map<Integer, String> mapVarNames = Collections.emptyMap();
 
-  private Map<Integer, Set<LVTVariable>> endpoints = Collections.emptyMap();
-  private ArrayList<LVTVariable> allLVT;
+  private LocalVariableTable lvt;
 
   @Override
   public void initContent(ConstantPool pool) throws IOException {
@@ -101,9 +52,8 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
     int len = data.readUnsignedShort();
     boolean isLVTT = this.getName().equals(ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE);
     if (len > 0) {
+      lvt = new LocalVariableTable(len);
       mapVarNames = new HashMap<Integer, String>(len);
-      endpoints = new HashMap<Integer,Set<LVTVariable>>(len);
-      allLVT = new ArrayList<LVTVariable>(len);
       for (int i = 0; i < len; i++) {
         int start = data.readUnsignedShort();
         int vlen = data.readUnsignedShort();
@@ -112,8 +62,7 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
         int varIndex = data.readUnsignedShort();
         LVTVariable v = new LVTVariable(pool.getPrimitiveConstant(nameIndex).getString(), pool.getPrimitiveConstant(descIndex).getString(),start,start+vlen,varIndex,isLVTT);
         mapVarNames.put(varIndex, pool.getPrimitiveConstant(nameIndex).getString());
-        allLVT.add(v);
-        v.addTo(endpoints);
+        lvt.addVariable(v);
       }
     }
     else {
@@ -123,18 +72,15 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
 
   public void addLocalVariableTable(StructLocalVariableTableAttribute attr) {
     mapVarNames.putAll(attr.getMapVarNames());
-    for (LVTVariable other : attr.allLVT) {
-        int idx = allLVT.indexOf(other);
-        if (idx < 0) {
-            allLVT.add(other);
-        } else {
-            LVTVariable mine = allLVT.get(idx);
-            mine.merge(other);
-        }
-    }
+    lvt.mergeLVTs(attr.lvt);
+    attr.lvt = lvt;
   }
 
   public Map<Integer, String> getMapVarNames() {
     return mapVarNames;
   }
+
+    public LocalVariableTable getLVT() {
+        return lvt;
+    }
 }
