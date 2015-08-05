@@ -15,12 +15,14 @@
  */
 package org.jetbrains.java.decompiler.struct.attr;
 
+import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +91,17 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
         return 0;
     }
   }
-  private Map<Integer, String> mapVarNames = Collections.emptyMap();
+
+  private static Comparator<LVTVariable> comp = new Comparator<LVTVariable>() {
+    @Override
+    public int compare(LVTVariable o1, LVTVariable o2)
+    {
+      if (o1.index != o2.index) return o1.index - o2.index;
+      if (o1.start != o2.start) return o1.start - o2.start;
+      return o1.end - o2.end;
+    }
+  };
+  private Map<VarVersionPair, String> mapVarNames = Collections.emptyMap();
 
   private Map<Integer, Set<LVTVariable>> endpoints = Collections.emptyMap();
   private ArrayList<LVTVariable> allLVT;
@@ -101,7 +113,7 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
     int len = data.readUnsignedShort();
     boolean isLVTT = this.getName().equals(ATTRIBUTE_LOCAL_VARIABLE_TYPE_TABLE);
     if (len > 0) {
-      mapVarNames = new HashMap<Integer, String>(len);
+      mapVarNames = new HashMap<VarVersionPair, String>(len);
       endpoints = new HashMap<Integer,Set<LVTVariable>>(len);
       allLVT = new ArrayList<LVTVariable>(len);
       for (int i = 0; i < len; i++) {
@@ -111,10 +123,11 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
         int descIndex = data.readUnsignedShort(); // either descriptor or signature
         int varIndex = data.readUnsignedShort();
         LVTVariable v = new LVTVariable(pool.getPrimitiveConstant(nameIndex).getString(), pool.getPrimitiveConstant(descIndex).getString(),start,start+vlen,varIndex,isLVTT);
-        mapVarNames.put(varIndex, pool.getPrimitiveConstant(nameIndex).getString());
         allLVT.add(v);
         v.addTo(endpoints);
       }
+      Collections.sort(allLVT, comp);
+      buildNameMap();
     }
     else {
       mapVarNames = Collections.emptyMap();
@@ -124,17 +137,33 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
   public void addLocalVariableTable(StructLocalVariableTableAttribute attr) {
     mapVarNames.putAll(attr.getMapVarNames());
     for (LVTVariable other : attr.allLVT) {
-        int idx = allLVT.indexOf(other);
-        if (idx < 0) {
-            allLVT.add(other);
-        } else {
-            LVTVariable mine = allLVT.get(idx);
-            mine.merge(other);
-        }
+      int idx = allLVT.indexOf(other);
+      if (idx < 0) {
+        allLVT.add(other);
+      }
+      else {
+        LVTVariable mine = allLVT.get(idx);
+        mine.merge(other);
+      }
+    }
+    Collections.sort(allLVT, comp);
+  }
+
+  private void buildNameMap() {
+    Map<Integer, Integer> versions = new HashMap<Integer, Integer>();
+    mapVarNames.clear();
+    for (LVTVariable lvt : allLVT) {
+      Integer idx = versions.get(lvt.index);
+      if (idx == null)
+        idx = 0;
+      else
+        idx++;
+      versions.put(lvt.index, idx);
+      mapVarNames.put(new VarVersionPair(lvt.index, idx.intValue()), lvt.name);
     }
   }
 
-  public Map<Integer, String> getMapVarNames() {
+  public Map<VarVersionPair, String> getMapVarNames() {
     return mapVarNames;
   }
 }

@@ -44,7 +44,7 @@ public class VarProcessor {
     new VarDefinitionHelper(root, mt, this).setVarDefinitions();
   }
 
-  public void setDebugVarNames(Map<Integer, String> mapDebugVarNames) {
+  public void setDebugVarNames(Map<VarVersionPair, String> mapDebugVarNames) {
     if (varVersions == null) {
       return;
     }
@@ -65,8 +65,11 @@ public class VarProcessor {
       String name = mapVarNames.get(pair);
 
       Integer index = mapOriginalVarIndices.get(pair.var);
-      if (index != null && mapDebugVarNames.containsKey(index)) {
-        name = mapDebugVarNames.get(index);
+      if (index != null) {
+        VarVersionPair key = new VarVersionPair(index.intValue(), pair.version);
+        if (mapDebugVarNames.containsKey(key)) {
+          name = mapDebugVarNames.get(key);
+        }
       }
 
       Integer counter = mapNames.get(name);
