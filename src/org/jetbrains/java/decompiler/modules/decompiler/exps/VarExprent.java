@@ -33,6 +33,7 @@ import org.jetbrains.java.decompiler.struct.match.MatchNode.RuleValue;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 public class VarExprent extends Exprent {
@@ -120,6 +121,11 @@ public class VarExprent extends Exprent {
            InterpreterUtil.equalObjects(getVarType(), ve.getVarType()); // FIXME: varType comparison redundant?
   }
 
+  @Override
+  public void getBytecodeRange(BitSet values) {
+    measureBytecode(values);
+  }
+
   public int getIndex() {
     return index;
   }
@@ -184,31 +190,31 @@ public class VarExprent extends Exprent {
   public void setStack(boolean stack) {
     this.stack = stack;
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public boolean match(MatchNode matchNode, MatchEngine engine) {
 
     if(!super.match(matchNode, engine)) {
       return false;
     }
-    
+
     RuleValue rule = matchNode.getRules().get(MatchProperties.EXPRENT_VAR_INDEX);
     if(rule != null) {
       if(rule.isVariable()) {
         if(!engine.checkAndSetVariableValue((String)rule.value, this.index)) {
           return false;
         }
-      } else { 
+      } else {
         if(this.index != Integer.valueOf((String)rule.value).intValue()) {
           return false;
         }
       }
     }
-    
+
     return true;
   }
-  
+
 }

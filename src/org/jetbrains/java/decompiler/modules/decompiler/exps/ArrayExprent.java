@@ -23,8 +23,8 @@ import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
-import java.util.Set;
 
 public class ArrayExprent extends Exprent {
 
@@ -32,7 +32,7 @@ public class ArrayExprent extends Exprent {
   private Exprent index;
   private final VarType hardType;
 
-  public ArrayExprent(Exprent array, Exprent index, VarType hardType, Set<Integer> bytecodeOffsets) {
+  public ArrayExprent(Exprent array, Exprent index, VarType hardType, BitSet bytecodeOffsets) {
     super(EXPRENT_ARRAY);
     this.array = array;
     this.index = index;
@@ -120,5 +120,12 @@ public class ArrayExprent extends Exprent {
 
   public Exprent getIndex() {
     return index;
+  }
+
+  @Override
+  public void getBytecodeRange(BitSet values) {
+    measureBytecode(values, array);
+    measureBytecode(values, index);
+    measureBytecode(values);
   }
 }

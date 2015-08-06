@@ -20,7 +20,6 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.ClassesProcessor.ClassNode;
@@ -74,7 +73,7 @@ public class InvocationExprent extends Exprent {
     super(EXPRENT_INVOCATION);
   }
 
-  public InvocationExprent(int opcode, LinkConstant cn, ListStack<Exprent> stack, int dynamicInvocationType, Set<Integer> bytecodeOffsets) {
+  public InvocationExprent(int opcode, LinkConstant cn, ListStack<Exprent> stack, int dynamicInvocationType, BitSet bytecodeOffsets) {
     this();
 
     name = cn.elementname;
@@ -418,6 +417,13 @@ public class InvocationExprent extends Exprent {
            InterpreterUtil.equalObjects(descriptor, it.getDescriptor()) &&
            functype == it.getFunctype() &&
            InterpreterUtil.equalLists(lstParameters, it.getLstParameters());
+  }
+
+  @Override
+  public void getBytecodeRange(BitSet values) {
+    measureBytecode(values, lstParameters);
+    measureBytecode(values, instance);
+    measureBytecode(values);
   }
 
   public List<Exprent> getLstParameters() {
