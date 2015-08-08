@@ -9,7 +9,6 @@ import java.util.Set;
 public class LocalVariableTable {
   private Map<Integer, Set<LVTVariable>> startpoints;
   private ArrayList<LVTVariable> allLVT;
-  private Map<VarVersionPair, String> mapVarNames;
 private Map<Integer, List<LVTVariable>> mapLVT;
 
   public LocalVariableTable(int len) {
@@ -33,7 +32,7 @@ private Map<Integer, List<LVTVariable>> mapLVT;
         mine.merge(other);
       }
     }
-    mapVarNames = null; // Invalidate the cache and rebuild it.
+    mapLVT = null; // Invalidate the cache and rebuild it.
   }
 
   public LVTVariable find(Integer index, List<Integer> offsets) {
@@ -51,15 +50,14 @@ private Map<Integer, List<LVTVariable>> mapLVT;
     return null;
   }
 
-  public Map<VarVersionPair, String> getMapVarNames() {
-    if (mapVarNames == null)
+  public Map<Integer, List<LVTVariable>> getMapVarNames() {
+    if (mapLVT == null)
       buildNameMap();
-    return mapVarNames;
+    return mapLVT;
   }
 
   private void buildNameMap() {
     Map<Integer, Integer> versions = new HashMap<Integer, Integer>();
-    mapVarNames = new HashMap<VarVersionPair, String>();
     mapLVT = new HashMap<Integer,List<LVTVariable>>();
     for (LVTVariable lvt : allLVT) {
       Integer idx = versions.get(lvt.index);
@@ -74,7 +72,6 @@ private Map<Integer, List<LVTVariable>> mapLVT;
           mapLVT.put(lvt.index, lvtList);
       }
       lvtList.add(lvt);
-      mapVarNames.put(new VarVersionPair(lvt.index, idx.intValue()), lvt.name);
     }
   }
 

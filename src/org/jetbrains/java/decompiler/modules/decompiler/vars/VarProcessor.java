@@ -52,7 +52,7 @@ private LocalVariableTable lvt;
     new VarDefinitionHelper(root, mt, this).setVarDefinitions();
   }
 
-  public void setDebugVarNames(Map<VarVersionPair, String> mapDebugVarNames) {
+  public void setDebugVarNames(Map<Integer, List<LVTVariable>> mapDebugVarNames) {
     if (varVersions == null) {
       return;
     }
@@ -68,16 +68,35 @@ private LocalVariableTable lvt;
     });
 
     Map<String, Integer> mapNames = new HashMap<String, Integer>();
-
+    Map<Integer,SortedSet<VarVersionPair>> indexedPairs = new HashMap<Integer,SortedSet<VarVersionPair>>();
+    Comparator<VarVersionPair> vvpVersionComparator = new Comparator<VarVersionPair>() {
+        @Override
+        public int compare(VarVersionPair o1, VarVersionPair o2) {
+            return o1.version - o2.version;
+        }
+    };
+    for (Entry<Integer, VarVersionPair> vvp : mapOriginalVarIndices.entrySet()) {
+        SortedSet<VarVersionPair> set = indexedPairs.get(vvp.getValue().var);
+        if (set == null) {
+            set = new TreeSet<VarVersionPair>(vvpVersionComparator);
+            indexedPairs.put(vvp.getValue().var, set);
+        }
+        set.add(vvp.getValue());
+    }
     for (VarVersionPair pair : listVars) {
       String name = mapVarNames.get(pair);
 
       VarVersionPair key = mapOriginalVarIndices.get(pair.var);
+
       boolean lvtName = false;
       if (key != null) {
-        if (mapDebugVarNames.containsKey(key)) {
-          name = mapDebugVarNames.get(key);
-          lvtName = true;
+        if (indexedPairs.containsKey(key.var)) {
+          int veridx = indexedPairs.get(key.var).headSet(key).size();
+          List<LVTVariable> list = mapDebugVarNames.get(key.var);
+          if (list.size()>veridx) {
+              name = list.get(veridx).name;
+              lvtName = true;
+          }
         }
       }
 

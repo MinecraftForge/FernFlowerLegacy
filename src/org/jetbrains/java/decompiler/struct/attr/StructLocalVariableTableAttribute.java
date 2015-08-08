@@ -23,6 +23,7 @@ import org.jetbrains.java.decompiler.util.DataInputFullStream;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -37,7 +38,7 @@ import java.util.Map;
 */
 public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
 
-  private Map<VarVersionPair, String> EMPTY_LVT = Collections.emptyMap();
+  private Map<Integer, List<LVTVariable>> EMPTY_LVT = Collections.emptyMap();
   private LocalVariableTable lvt;
 
   @Override
@@ -65,7 +66,7 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
     attr.lvt = lvt;
   }
 
-  public Map<VarVersionPair, String> getMapVarNames() {
+  public Map<Integer, List<LVTVariable>> getMapVarNames() {
     return lvt == null ? EMPTY_LVT : lvt.getMapVarNames();
   }
 
