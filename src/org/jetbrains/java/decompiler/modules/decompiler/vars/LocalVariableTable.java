@@ -64,7 +64,7 @@ private Map<Integer, List<LVTVariable>> mapLVT;
     for (LVTVariable lvt : allLVT) {
       Integer idx = versions.get(lvt.index);
       if (idx == null)
-        idx = 0;
+        idx = 1;
       else
         idx++;
       versions.put(lvt.index, idx);

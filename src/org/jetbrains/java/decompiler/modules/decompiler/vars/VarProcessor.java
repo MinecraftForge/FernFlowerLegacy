@@ -34,7 +34,7 @@ public class VarProcessor {
 private LocalVariableTable lvt;
 
   public void setVarVersions(RootStatement root) {
-    Map<Integer, Integer> mapOriginalVarIndices = null;
+    Map<Integer, VarVersionPair> mapOriginalVarIndices = null;
     if (varVersions != null) {
         mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
     }
@@ -57,7 +57,7 @@ private LocalVariableTable lvt;
       return;
     }
 
-    Map<Integer, Integer> mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
+    Map<Integer, VarVersionPair> mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
 
     List<VarVersionPair> listVars = new ArrayList<VarVersionPair>(mapVarNames.keySet());
     Collections.sort(listVars, new Comparator<VarVersionPair>() {
@@ -72,18 +72,19 @@ private LocalVariableTable lvt;
     for (VarVersionPair pair : listVars) {
       String name = mapVarNames.get(pair);
 
-      Integer index = mapOriginalVarIndices.get(pair.var);
-      if (index != null) {
-        VarVersionPair key = new VarVersionPair(index.intValue(), pair.version);
+      VarVersionPair key = mapOriginalVarIndices.get(pair.var);
+      boolean lvtName = false;
+      if (key != null) {
         if (mapDebugVarNames.containsKey(key)) {
           name = mapDebugVarNames.get(key);
+          lvtName = true;
         }
       }
 
       Integer counter = mapNames.get(name);
       mapNames.put(name, counter == null ? counter = new Integer(0) : ++counter);
 
-      if (counter > 0) {
+      if (counter > 0 && !lvtName) {
         name += String.valueOf(counter);
       }
 
@@ -138,8 +139,8 @@ public LocalVariableTable getLVT() {
 }
 
 public int getRemapped(int index) {
-    Integer res = varVersions.getMapOriginalVarIndices().get(index);
+    VarVersionPair res = varVersions.getMapOriginalVarIndices().get(index);
     if (res == null) return index;
-    return res;
+    return res.var;
 }
 }

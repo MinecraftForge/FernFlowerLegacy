@@ -34,7 +34,7 @@ import java.util.Map.Entry;
 
 public class VarVersionsProcessor {
 
-  private Map<Integer, Integer> mapOriginalVarIndices = new HashMap<Integer, Integer>();
+  private Map<Integer, VarVersionPair> mapOriginalVarIndices = new HashMap<Integer, VarVersionPair>();
   private VarTypeProcessor typeProcessor;
 
   public void setVarVersions(RootStatement root) {
@@ -232,7 +232,7 @@ public class VarVersionsProcessor {
     CounterContainer counters = DecompilerContext.getCounterContainer();
 
     final Map<VarVersionPair, Integer> mapVarPaar = new HashMap<VarVersionPair, Integer>();
-    Map<Integer, Integer> mapOriginalVarIndices = new HashMap<Integer, Integer>();
+    Map<Integer, VarVersionPair> mapOriginalVarIndices = new HashMap<Integer, VarVersionPair>();
     mapOriginalVarIndices.putAll(this.mapOriginalVarIndices);
 
     // map var-version pairs on new var indexes
@@ -259,7 +259,7 @@ public class VarVersionsProcessor {
         }
 
         mapVarPaar.put(pair, newIndex);
-        mapOriginalVarIndices.put(newIndex, pair.var);
+        mapOriginalVarIndices.put(newIndex, pair);
       }
     }
 
@@ -316,7 +316,7 @@ public class VarVersionsProcessor {
     typeProcessor.getMapFinalVars().put(pair, finalType);
   }
 
-  public Map<Integer, Integer> getMapOriginalVarIndices() {
+  public Map<Integer, VarVersionPair> getMapOriginalVarIndices() {
     return mapOriginalVarIndices;
   }
 }
