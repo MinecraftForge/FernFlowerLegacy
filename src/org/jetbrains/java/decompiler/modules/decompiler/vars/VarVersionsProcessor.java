@@ -233,6 +233,7 @@ public class VarVersionsProcessor {
 
     final Map<VarVersionPair, Integer> mapVarPaar = new HashMap<VarVersionPair, Integer>();
     Map<Integer, Integer> mapOriginalVarIndices = new HashMap<Integer, Integer>();
+    mapOriginalVarIndices.putAll(this.mapOriginalVarIndices);
 
     // map var-version pairs on new var indexes
     List<VarVersionPair> lst = new ArrayList<VarVersionPair>(mapExprentMinTypes.keySet());

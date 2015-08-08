@@ -68,4 +68,8 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
   public Map<VarVersionPair, String> getMapVarNames() {
     return lvt == null ? EMPTY_LVT : lvt.getMapVarNames();
   }
+
+public LocalVariableTable getLVT() {
+    return lvt;
+}
 }

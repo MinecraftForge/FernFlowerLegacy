@@ -170,8 +170,12 @@ public class ClassWrapper {
 
         if (attr != null) {
           varProc.setDebugVarNames(attr.getMapVarNames());
+          varProc.setLVT(attr.getLVT());
         }
       }
+
+      MethodProcessorRunnable.printMethod(root, mt.getClassStruct().qualifiedName+"."+mt.getName()+mt.getDescriptor(),varProc);
+
 
       DecompilerContext.getLogger().endMethod();
     }

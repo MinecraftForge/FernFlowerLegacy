@@ -10,6 +10,7 @@ public class LocalVariableTable {
   private Map<Integer, Set<LVTVariable>> startpoints;
   private ArrayList<LVTVariable> allLVT;
   private Map<VarVersionPair, String> mapVarNames;
+private Map<Integer, List<LVTVariable>> mapLVT;
 
   public LocalVariableTable(int len) {
     startpoints = new HashMap<Integer,Set<LVTVariable>>(len);
@@ -59,6 +60,7 @@ public class LocalVariableTable {
   private void buildNameMap() {
     Map<Integer, Integer> versions = new HashMap<Integer, Integer>();
     mapVarNames = new HashMap<VarVersionPair, String>();
+    mapLVT = new HashMap<Integer,List<LVTVariable>>();
     for (LVTVariable lvt : allLVT) {
       Integer idx = versions.get(lvt.index);
       if (idx == null)
@@ -66,7 +68,17 @@ public class LocalVariableTable {
       else
         idx++;
       versions.put(lvt.index, idx);
+      List<LVTVariable> lvtList = mapLVT.get(lvt.index);
+      if (lvtList == null) {
+          lvtList = new ArrayList<LVTVariable>();
+          mapLVT.put(lvt.index, lvtList);
+      }
+      lvtList.add(lvt);
       mapVarNames.put(new VarVersionPair(lvt.index, idx.intValue()), lvt.name);
     }
   }
+
+public List<LVTVariable> getCandidates(int index) {
+    return mapLVT.get(index);
+}
 }

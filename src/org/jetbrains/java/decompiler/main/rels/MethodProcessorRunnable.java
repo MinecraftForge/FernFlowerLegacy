@@ -26,16 +26,20 @@ import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.modules.code.DeadCodeHelper;
 import org.jetbrains.java.decompiler.modules.decompiler.*;
 import org.jetbrains.java.decompiler.modules.decompiler.deobfuscator.ExceptionDeobfuscator;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DummyExitStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.LVTVariable;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructMethod;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.List;
 
 public class MethodProcessorRunnable implements Runnable {
 
@@ -204,8 +208,6 @@ public class MethodProcessorRunnable implements Runnable {
 
     varProc.setVarDefinitions(root);
 
-    printMethod(root);
-
     // must be the last invocation, because it makes the statement structure inconsistent
     // FIXME: new edge type needed
     LabelHelper.replaceContinueWithBreak(root);
@@ -225,17 +227,17 @@ public class MethodProcessorRunnable implements Runnable {
     return finished;
   }
 
-  private static void printMethod(RootStatement root) {
-    System.out.println("{");
+  public static void printMethod(RootStatement root, String name, VarProcessor varProc) {
+    System.out.println(name + " {");
 
     for (Object obj : root.getSequentialObjects()) {
       if (obj instanceof Statement) {
-        printStatement((Statement)obj, "  ");
+        printStatement((Statement)obj, "  ",varProc);
       } else {
         System.out.println("  " + obj.getClass().getSimpleName());
       }
     }
-    printStatement(root.getDummyExit(), "  ");
+    printStatement(root.getDummyExit(), "  ",varProc);
     System.out.println("}");
   }
 
@@ -259,7 +261,7 @@ public class MethodProcessorRunnable implements Runnable {
     }
   }
 
-  private static void printStatement(Statement statement, String indent) {
+  private static void printStatement(Statement statement, String indent, VarProcessor varProc) {
     BitSet values = new BitSet();
     getOffset(statement, values);
     int start = values.nextSetBit(0);
@@ -269,7 +271,7 @@ public class MethodProcessorRunnable implements Runnable {
 
     if (statement.getExprents() != null) {
       for(Exprent exp : statement.getExprents()) {
-        System.out.println(indent + "  " + exp.getClass().getSimpleName());
+          System.out.println(printExprent(indent + "  ", exp,varProc));
       }
     }
     /*
@@ -332,10 +334,32 @@ public class MethodProcessorRunnable implements Runnable {
     indent += "  ";
     for (Object obj : statement.getSequentialObjects()) {
       if (obj instanceof Statement) {
-        printStatement((Statement)obj, indent);
+        printStatement((Statement)obj, indent,varProc);
+      } else if (obj instanceof Exprent) {
+          System.out.println(printExprent(indent, (Exprent) obj, varProc));
       } else {
         System.out.println(indent + obj.getClass().getSimpleName());
       }
     }
+  }
+  private static String printExprent(String indent, Exprent exp, VarProcessor varProc) {
+      StringBuffer sb = new StringBuffer();
+      sb.append(indent);
+      BitSet values = new BitSet();
+      exp.getBytecodeRange(values);
+      sb.append("(").append(values.nextSetBit(0)).append(", ").append(values.length()-1).append(") ");
+      sb.append(exp.getClass().getSimpleName());
+      sb.append(" ").append(exp.id).append(" ");
+      if (exp instanceof VarExprent) {
+          VarExprent varExprent = (VarExprent)exp;
+        int currindex = varExprent.getIndex();
+        int origindex = varProc.getRemapped(currindex);
+        List<LVTVariable> candidates = varProc.getLVT().getCandidates(origindex);
+        sb.append("[").append(currindex).append(":").append(origindex).append(", ").append(varExprent.isStack()).append("]").append(candidates);
+      } else if (exp instanceof AssignmentExprent) {
+          AssignmentExprent assignmentExprent = (AssignmentExprent)exp;
+        sb.append("{").append(printExprent(" ",assignmentExprent.getLeft(),varProc)).append(" =").append(printExprent(" ",assignmentExprent.getRight(),varProc)).append("}");
+      }
+      return sb.toString();
   }
 }

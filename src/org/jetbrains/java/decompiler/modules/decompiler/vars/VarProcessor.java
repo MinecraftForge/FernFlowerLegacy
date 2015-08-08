@@ -31,10 +31,18 @@ public class VarProcessor {
   private VarVersionsProcessor varVersions;
   private final Map<VarVersionPair, String> thisVars = new HashMap<VarVersionPair, String>();
   private final Set<VarVersionPair> externalVars = new HashSet<VarVersionPair>();
+private LocalVariableTable lvt;
 
   public void setVarVersions(RootStatement root) {
+    Map<Integer, Integer> mapOriginalVarIndices = null;
+    if (varVersions != null) {
+        mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
+    }
     varVersions = new VarVersionsProcessor();
     varVersions.setVarVersions(root);
+    if (mapOriginalVarIndices != null) {
+        varVersions.getMapOriginalVarIndices().putAll(mapOriginalVarIndices);
+    }
   }
 
   public void setVarDefinitions(Statement root) {
@@ -121,4 +129,17 @@ public class VarProcessor {
   public Set<VarVersionPair> getExternalVars() {
     return externalVars;
   }
+
+public void setLVT(LocalVariableTable lvt) {
+    this.lvt = lvt;
+}
+public LocalVariableTable getLVT() {
+    return this.lvt;
+}
+
+public int getRemapped(int index) {
+    Integer res = varVersions.getMapOriginalVarIndices().get(index);
+    if (res == null) return index;
+    return res;
+}
 }
