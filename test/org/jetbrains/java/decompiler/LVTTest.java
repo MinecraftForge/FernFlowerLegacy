@@ -30,4 +30,5 @@ public class LVTTest extends SingleClassesTestBase {
   }
 
   @Test public void testMatch1() { doTest("pkg/TestLVT"); }
+  @Test public void testMatch2() { doTest("pkg/TestLVTScoping"); }
 }
