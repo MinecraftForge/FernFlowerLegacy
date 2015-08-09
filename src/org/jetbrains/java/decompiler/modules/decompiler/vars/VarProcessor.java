@@ -93,9 +93,11 @@ private LocalVariableTable lvt;
         if (indexedPairs.containsKey(key.var)) {
           int veridx = indexedPairs.get(key.var).headSet(key).size();
           List<LVTVariable> list = mapDebugVarNames.get(key.var);
-          if (list.size()>veridx) {
+          if (list != null && list.size()>veridx) {
               name = list.get(veridx).name;
               lvtName = true;
+          } else if (list == null) {
+              // we're an exception type, probably. let's just fall through
           }
         }
       }

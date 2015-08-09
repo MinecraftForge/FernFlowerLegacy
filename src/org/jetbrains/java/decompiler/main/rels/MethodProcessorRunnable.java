@@ -229,7 +229,10 @@ public class MethodProcessorRunnable implements Runnable {
 
   public static void printMethod(RootStatement root, String name, VarProcessor varProc) {
     System.out.println(name + " {");
-
+    if (root == null || root.getSequentialObjects() == null) {
+        System.out.println("}");
+        return;
+    }
     for (Object obj : root.getSequentialObjects()) {
       if (obj instanceof Statement) {
         printStatement((Statement)obj, "  ",varProc);

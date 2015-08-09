@@ -169,8 +169,8 @@ public class ClassWrapper {
           StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
 
         if (attr != null) {
-          varProc.setDebugVarNames(attr.getMapVarNames());
           varProc.setLVT(attr.getLVT());
+          varProc.setDebugVarNames(attr.getMapVarNames());
         }
       }
 
