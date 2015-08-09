@@ -16,6 +16,7 @@
 package org.jetbrains.java.decompiler.modules.decompiler.stats;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.TextBuffer;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
@@ -68,7 +69,15 @@ public class CatchAllStatement extends Statement {
       }
     }
 
-    vars.add(new VarExprent(DecompilerContext.getCounterContainer().getCounterAndIncrement(CounterContainer.VAR_COUNTER),
+    int varIndex = -1;
+    BasicBlock block = handler.getBasichead().getBlock();
+    if (!block.getSeq().isEmpty() && block.getInstruction(0).opcode == CodeConstants.opc_astore) {
+      varIndex = block.getInstruction(0).getOperand(0);
+    }
+    else {
+      varIndex = DecompilerContext.getCounterContainer().getCounterAndIncrement(CounterContainer.VAR_COUNTER);
+    }
+    vars.add(new VarExprent(varIndex,
                             new VarType(CodeConstants.TYPE_OBJECT, 0, "java/lang/Throwable"),
                             (VarProcessor)DecompilerContext.getProperty(DecompilerContext.CURRENT_VAR_PROCESSOR)));
   }

@@ -21,8 +21,8 @@ public class TestClassSimpleBytecodeMapping {
    public void test2(String var1) {
       try {
          Integer.parseInt(var1);// 34
-      } catch (Exception var6) {// 35
-         System.out.println(var6);// 36
+      } catch (Exception var2) {// 35
+         System.out.println(var2);// 36
       } finally {
          System.out.println("Finally");// 38
       }

@@ -17,7 +17,6 @@ package org.jetbrains.java.decompiler.main.rels;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.code.InstructionSequence;
-import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.code.cfg.ControlFlowGraph;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
@@ -277,63 +276,6 @@ public class MethodProcessorRunnable implements Runnable {
           System.out.println(printExprent(indent + "  ", exp,varProc));
       }
     }
-    /*
-      for (Object obj : stat.getSequentialObjects()) {
-        if (obj instanceof Statement) {
-          Statement st = (Statement)obj;
-          childVars.addAll(initStatement(st));
-
-          if (st.type == DoStatement.TYPE_DO) {
-            DoStatement dost = (DoStatement)st;
-            if (dost.getLooptype() != DoStatement.LOOP_FOR &&
-                dost.getLooptype() != DoStatement.LOOP_DO) {
-              currVars.add(dost.getConditionExprent());
-            }
-          }
-          else if (st.type == DoStatement.TYPE_CATCHALL) {
-            CatchAllStatement fin = (CatchAllStatement)st;
-            if (fin.isFinally() && fin.getMonitor() != null) {
-              currVars.add(fin.getMonitor());
-            }
-          }
-        }
-        else if (obj instanceof Exprent) {
-          currVars.add((Exprent)obj);
-        }
-      }
-
-      // children statements
-      for (Integer index : childVars) {
-        Integer count = mapCount.get(index);
-        if (count == null) {
-          count = new Integer(0);
-        }
-        mapCount.put(index, new Integer(count.intValue() + 1));
-      }
-
-      condlst = getAllVars(currVars);
-    }
-    else {
-      condlst = getAllVars(stat.getExprents());
-    }
-
-    // this statement
-    for (VarExprent var : condlst) {
-      mapCount.put(new Integer(var.getIndex()), new Integer(2));
-    }
-
-
-    HashSet<Integer> set = new HashSet<Integer>(mapCount.keySet());
-
-    // put all variables defined in this statement into the set
-    for (Entry<Integer, Integer> en : mapCount.entrySet()) {
-      if (en.getValue().intValue() > 1) {
-        mapVarDefStatements.put(en.getKey(), stat);
-      }
-    }
-
-    mapStatementVars.put(stat.id, set);
-*/
     indent += "  ";
     for (Object obj : statement.getSequentialObjects()) {
       if (obj instanceof Statement) {
@@ -357,8 +299,9 @@ public class MethodProcessorRunnable implements Runnable {
           VarExprent varExprent = (VarExprent)exp;
         int currindex = varExprent.getIndex();
         int origindex = varProc.getRemapped(currindex);
-        List<LVTVariable> candidates = varProc.getLVT().getCandidates(origindex);
-        sb.append("[").append(currindex).append(":").append(origindex).append(", ").append(varExprent.isStack()).append("]").append(candidates);
+        sb.append("[").append(currindex).append(":").append(origindex).append(", ").append(varExprent.isStack()).append("]");
+        if (varProc.getLVT() != null)
+          sb.append(varProc.getLVT().getCandidates(origindex));
       } else if (exp instanceof AssignmentExprent) {
           AssignmentExprent assignmentExprent = (AssignmentExprent)exp;
         sb.append("{").append(printExprent(" ",assignmentExprent.getLeft(),varProc)).append(" =").append(printExprent(" ",assignmentExprent.getRight(),varProc)).append("}");

@@ -152,16 +152,17 @@ private LocalVariableTable lvt;
     return externalVars;
   }
 
-public void setLVT(LocalVariableTable lvt) {
+  public void setLVT(LocalVariableTable lvt) {
     this.lvt = lvt;
-}
-public LocalVariableTable getLVT() {
-    return this.lvt;
-}
+  }
 
-public int getRemapped(int index) {
+  public LocalVariableTable getLVT() {
+    return this.lvt;
+  }
+
+  public int getRemapped(int index) {
     VarVersionPair res = varVersions.getMapOriginalVarIndices().get(index);
     if (res == null) return index;
     return res.var;
-}
+  }
 }
