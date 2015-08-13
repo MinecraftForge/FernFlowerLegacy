@@ -217,4 +217,9 @@ public class VarExprent extends Exprent {
     return true;
   }
 
+  @Override
+  public String toString() {
+    return "var_" + index + "_" + version;
+  }
+
 }

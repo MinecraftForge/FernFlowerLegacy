@@ -154,6 +154,15 @@ public class VarDefinitionHelper {
             }
           }
         }
+        else if (dstat.getLooptype() == DoStatement.LOOP_FOREACH) {
+          if (dstat.getInitExprent() != null && dstat.getInitExprent().type == Exprent.EXPRENT_VAR) {
+            VarExprent var = (VarExprent)dstat.getInitExprent();
+            if (var.getIndex() == index.intValue()) {
+              var.setDefinition(true);
+              continue;
+            }
+          }
+        }
       }
 
 
@@ -269,6 +278,7 @@ public class VarDefinitionHelper {
           if (st.type == DoStatement.TYPE_DO) {
             DoStatement dost = (DoStatement)st;
             if (dost.getLooptype() != DoStatement.LOOP_FOR &&
+                dost.getLooptype() != DoStatement.LOOP_FOREACH &&
                 dost.getLooptype() != DoStatement.LOOP_DO) {
               currVars.add(dost.getConditionExprent());
             }

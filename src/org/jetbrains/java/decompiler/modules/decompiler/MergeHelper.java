@@ -18,8 +18,13 @@ package org.jetbrains.java.decompiler.modules.decompiler;
 import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.ArrayExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.IfExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.*;
 
 import java.util.ArrayList;
@@ -63,6 +68,8 @@ public class MergeHelper {
         if (matchWhile(stat)) {
           // identify a for loop - subtype of while
           matchFor(stat);
+          // identify for each loop,
+          matchForEach(stat);
         }
         else {
           // identify a do{}while loop
@@ -72,6 +79,7 @@ public class MergeHelper {
         break;
       case DoStatement.LOOP_WHILE:
         matchFor(stat);
+        matchForEach(stat);
     }
 
     return (stat.getLooptype() != oldloop);
@@ -366,17 +374,193 @@ public class MergeHelper {
       stat.setIncExprent(lastData.getExprents().remove(lastData.getExprents().size() - 1));
     }
 
-    if (lastData.getExprents().isEmpty()) {
-      List<StatEdge> lst = lastData.getAllSuccessorEdges();
-      if (!lst.isEmpty()) {
-        lastData.removeSuccessor(lst.get(0));
-      }
-      removeLastEmptyStatement(stat, lastData);
-    }
+    cleanEmptyStatements(stat, lastData);
 
     return true;
   }
 
+  private static boolean matchForEach(DoStatement stat) {
+    AssignmentExprent firstDoExprent = null, initDoExprent = null, initCopyExprent = null;
+    Statement firstData, preData = null;
+
+    // search for an initializing exprent
+    Statement current = stat;
+    while (true) {
+      Statement parent = current.getParent();
+      if (parent == null) {
+        break;
+      }
+
+      if (parent.type == Statement.TYPE_SEQUENCE) {
+        if (current == parent.getFirst()) {
+          current = parent;
+        }
+        else {
+          preData = current.getNeighbours(StatEdge.TYPE_REGULAR, Statement.DIRECTION_BACKWARD).get(0);
+          preData = getLastDirectData(preData);
+          if (preData != null && !preData.getExprents().isEmpty()) {
+            Exprent exprent = preData.getExprents().get(preData.getExprents().size() - 1);
+            if (exprent.type == Exprent.EXPRENT_ASSIGNMENT) {
+              initDoExprent = (AssignmentExprent)exprent;
+              if (preData.getExprents().size() >= 2) {
+                exprent = preData.getExprents().get(preData.getExprents().size() - 2);
+                if (exprent.type == Exprent.EXPRENT_ASSIGNMENT) {
+                  initCopyExprent = (AssignmentExprent)exprent;
+                }
+              }
+            }
+          }
+          break;
+        }
+      }
+      else {
+        break;
+      }
+    }
+
+    firstData = getFirstDirectData(stat.getFirst());
+    if (firstData != null && firstData.getExprents().get(0).type == Exprent.EXPRENT_ASSIGNMENT) {
+      firstDoExprent = (AssignmentExprent)firstData.getExprents().get(0);
+    }
+
+    if (stat.getLooptype() == DoStatement.LOOP_WHILE && initDoExprent != null && firstDoExprent != null) {
+      if (initDoExprent.type == Exprent.EXPRENT_ASSIGNMENT &&
+          isInvoke(((AssignmentExprent)initDoExprent).getRight(), null, "iterator", "()Ljava/util/Iterator;")) {
+
+        if (!isInvoke(drillNots(stat.getConditionExprent()), "java/util/Iterator", "hasNext", "()Z") ||
+            firstDoExprent.type != Exprent.EXPRENT_ASSIGNMENT) {
+          return false;
+        }
+
+        AssignmentExprent ass = (AssignmentExprent)firstDoExprent;
+        if (!isInvoke(ass.getRight(), "java/util/Iterator", "next", "()Ljava/lang/Object;") ||
+            ass.getLeft().type != Exprent.EXPRENT_VAR) {
+          return false;
+        }
+
+        InvocationExprent holder = (InvocationExprent)((AssignmentExprent)initDoExprent).getRight();
+        stat.setLooptype(DoStatement.LOOP_FOREACH);
+        stat.setInitExprent(ass.getLeft());
+        stat.setIncExprent(holder.getInstance());
+        preData.getExprents().remove(initDoExprent);
+        firstData.getExprents().remove(firstDoExprent);
+      }
+    }
+    else if (stat.getLooptype() == DoStatement.LOOP_FOR) {
+      if (isType(stat.getInitExprent(), Exprent.EXPRENT_ASSIGNMENT) &&
+          isInvoke(((AssignmentExprent)stat.getInitExprent()).getRight(), null, "iterator", "()Ljava/util/Iterator;") &&
+          isType(stat.getConditionExprent(), Exprent.EXPRENT_FUNCTION)) {
+
+        if (!isInvoke(drillNots(stat.getConditionExprent()), "java/util/Iterator", "hasNext", "()Z") ||
+            !isType(stat.getIncExprent(), Exprent.EXPRENT_ASSIGNMENT)) {
+          return false;
+        }
+
+        AssignmentExprent ass = (AssignmentExprent)stat.getIncExprent();
+        if (!isInvoke(ass.getRight(), "java/util/Iterator", "next", "()Ljava/lang/Object;") ||
+            ass.getLeft().type != Exprent.EXPRENT_VAR) {
+          return false;
+        }
+
+        InvocationExprent holder = (InvocationExprent)((AssignmentExprent)stat.getInitExprent()).getRight();
+        stat.setLooptype(DoStatement.LOOP_FOREACH);
+        stat.setInitExprent(ass.getLeft());
+        stat.setIncExprent(holder.getInstance());
+      }
+      else if (initDoExprent != null && initDoExprent.getRight().type == Exprent.EXPRENT_FUNCTION) {
+        if (firstDoExprent == null ||
+            firstDoExprent.getRight().type != Exprent.EXPRENT_ARRAY ||
+            firstDoExprent.getLeft().type != Exprent.EXPRENT_VAR ||
+            !isType(stat.getIncExprent(), Exprent.EXPRENT_FUNCTION) ||
+            !isType(stat.getInitExprent(), Exprent.EXPRENT_ASSIGNMENT)) {
+          return false;
+        }
+
+        FunctionExprent funcRight = (FunctionExprent)initDoExprent.getRight();
+        FunctionExprent funcInc = (FunctionExprent)stat.getIncExprent();
+        ArrayExprent arr = (ArrayExprent)firstDoExprent.getRight();
+
+        if (funcRight.getFuncType() != FunctionExprent.FUNCTION_ARRAY_LENGTH ||
+            (funcInc.getFuncType() != FunctionExprent.FUNCTION_PPI && funcInc.getFuncType() != FunctionExprent.FUNCTION_IPP) ||
+            arr.getIndex().type != Exprent.EXPRENT_VAR ||
+            arr.getArray().type != Exprent.EXPRENT_VAR) {
+            return false;
+        }
+
+        VarExprent index = (VarExprent)arr.getIndex();
+        VarExprent array = (VarExprent)arr.getArray();
+        VarExprent counter = (VarExprent)funcInc.getLstOperands().get(0);
+
+        if (counter.getIndex() != index.getIndex() ||
+            counter.getVersion() != index.getVersion()) {
+          return false;
+        }
+
+        stat.setLooptype(DoStatement.LOOP_FOREACH);
+        stat.setInitExprent(firstDoExprent.getLeft());
+        stat.setIncExprent(funcRight.getLstOperands().get(0));
+        preData.getExprents().remove(initDoExprent);
+        firstData.getExprents().remove(firstDoExprent);
+
+        if (initCopyExprent != null && initCopyExprent.getLeft().type == Exprent.EXPRENT_VAR) {
+          VarExprent copy = (VarExprent)initCopyExprent.getLeft();
+          if (copy.getIndex() == array.getIndex() && copy.getVersion() == array.getVersion()) {
+            preData.getExprents().remove(initCopyExprent);
+            stat.setIncExprent(initCopyExprent.getRight());
+          }
+        }
+      }
+    }
+
+    cleanEmptyStatements(stat, firstData);
+
+    return true;
+  }
+
+  private static boolean isType(Exprent exp, int type) { //This is just a helper macro, Wish java had real macros.
+    return exp != null && exp.type == type;
+  }
+
+  private static boolean isInvoke(Exprent exp, String cls, String method, String desc) {
+    if (!isType(exp,  Exprent.EXPRENT_INVOCATION)) {
+      return false;
+    }
+    InvocationExprent invoc = (InvocationExprent)exp;
+    if (cls != null && !cls.equals(invoc.getClassname())) {
+      return false;
+    }
+    return method.equals(invoc.getName()) && desc.equals(invoc.getStringDescriptor());
+  }
+  private static Exprent drillNots(Exprent exp) {
+    while (true) {
+      if (exp.type == Exprent.EXPRENT_FUNCTION) {
+        FunctionExprent fun = (FunctionExprent)exp;
+        if (fun.getFuncType() == FunctionExprent.FUNCTION_BOOL_NOT) {
+          exp = fun.getLstOperands().get(0);
+        }
+        else if (fun.getFuncType() == FunctionExprent.FUNCTION_EQ ||
+                 fun.getFuncType() == FunctionExprent.FUNCTION_NE) {
+          return fun.getLstOperands().get(0);
+        }
+        else {
+          return null;
+        }
+      }
+      else {
+        return null;
+      }
+    }
+  }
+
+  private static void cleanEmptyStatements(DoStatement dostat, Statement stat) {
+    if (stat != null && stat.getExprents().isEmpty()) {
+      List<StatEdge> lst = stat.getAllSuccessorEdges();
+      if (!lst.isEmpty()) {
+        stat.removeSuccessor(lst.get(0));
+      }
+      removeLastEmptyStatement(dostat, stat);
+    }
+  }
   private static void removeLastEmptyStatement(DoStatement dostat, Statement stat) {
 
     if (stat == dostat.getFirst()) {
@@ -415,6 +599,22 @@ public class MergeHelper {
             return tmp;
           }
         }
+    }
+    return null;
+  }
+
+  private static Statement getFirstDirectData(Statement stat) {
+    if (stat.getExprents() != null && !stat.getExprents().isEmpty()) {
+      return stat;
+    }
+
+    if (stat.type == Statement.TYPE_SEQUENCE) {
+      for (Statement tmp : stat.getStats()) {
+        Statement ret = getFirstDirectData(tmp);
+        if (ret != null) {
+          return ret;
+        }
+      }
     }
     return null;
   }

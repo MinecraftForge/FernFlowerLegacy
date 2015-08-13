@@ -46,6 +46,8 @@ public class VarVersionsProcessor {
     FlattenStatementsHelper flattenHelper = new FlattenStatementsHelper();
     DirectGraph graph = flattenHelper.buildDirectGraph(root);
 
+    org.jetbrains.java.decompiler.util.DotExporter.toDotFile(graph, mt, "setVarVersions");
+
     mergePhiVersions(ssa, graph);
 
     typeProcessor = new VarTypeProcessor();

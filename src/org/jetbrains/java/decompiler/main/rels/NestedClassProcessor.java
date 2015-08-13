@@ -301,6 +301,8 @@ public class NestedClassProcessor {
         if (meth.root != null) { // neither abstract, nor native
           DirectGraph graph = meth.getOrBuildGraph();
 
+          org.jetbrains.java.decompiler.util.DotExporter.toDotFile(graph, meth.methodStruct, "computeLocalVars");
+
           graph.iterateExprents(new DirectGraph.ExprentIterator() {
             public int processExprent(Exprent exprent) {
               List<Exprent> lst = exprent.getAllExprents(true);

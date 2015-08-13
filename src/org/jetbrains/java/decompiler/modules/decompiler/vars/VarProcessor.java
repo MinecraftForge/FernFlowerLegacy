@@ -31,7 +31,7 @@ public class VarProcessor {
   private VarVersionsProcessor varVersions;
   private final Map<VarVersionPair, String> thisVars = new HashMap<VarVersionPair, String>();
   private final Set<VarVersionPair> externalVars = new HashSet<VarVersionPair>();
-private LocalVariableTable lvt;
+  private LocalVariableTable lvt;
 
   public void setVarVersions(RootStatement root) {
     Map<Integer, VarVersionPair> mapOriginalVarIndices = null;

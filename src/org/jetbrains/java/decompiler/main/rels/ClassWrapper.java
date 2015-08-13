@@ -176,7 +176,6 @@ public class ClassWrapper {
 
       MethodProcessorRunnable.printMethod(root, mt.getClassStruct().qualifiedName+"."+mt.getName()+mt.getDescriptor(),varProc);
 
-
       DecompilerContext.getLogger().endMethod();
     }
 
