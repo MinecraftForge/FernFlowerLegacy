@@ -9,7 +9,7 @@ import java.util.Set;
 public class LocalVariableTable {
   private Map<Integer, Set<LVTVariable>> startpoints;
   private ArrayList<LVTVariable> allLVT;
-private Map<Integer, List<LVTVariable>> mapLVT;
+  private Map<Integer, List<LVTVariable>> mapLVT;
 
   public LocalVariableTable(int len) {
     startpoints = new HashMap<Integer,Set<LVTVariable>>(len);
@@ -35,15 +35,14 @@ private Map<Integer, List<LVTVariable>> mapLVT;
     mapLVT = null; // Invalidate the cache and rebuild it.
   }
 
-  public LVTVariable find(Integer index, List<Integer> offsets) {
+  public LVTVariable find(int index, List<Integer> offsets) {
     for (Integer offset : offsets) {
       Set<LVTVariable> lvs = startpoints.get(offset);
       if (lvs == null || lvs.isEmpty())
         continue;
-      int idx = index.intValue();
 
       for (LVTVariable lv : lvs) {
-        if (lv.index == idx)
+        if (lv.index == index)
           return lv;
       }
     }
@@ -75,7 +74,7 @@ private Map<Integer, List<LVTVariable>> mapLVT;
     }
   }
 
-public List<LVTVariable> getCandidates(int index) {
+  public List<LVTVariable> getCandidates(int index) {
     return mapLVT.get(index);
-}
+  }
 }

@@ -241,6 +241,9 @@ public class InvocationExprent extends Exprent {
         if (super_qualifier != null) {
           TextUtil.writeQualifiedSuper(buf, super_qualifier);
         }
+        //else if (getExprType().equals(VarType.VARTYPE_OBJECT) && instance instanceof FunctionExprent && ((FunctionExprent)instance).getFuncType() == FunctionExprent.FUNCTION_CAST) {
+        //  buf.append(((FunctionExprent)instance).getLstOperands().get(0).toJava(indent, tracer));
+        //} // THis in theory removes casts that are not needed... ignore it for now.
         else if (instance != null) {
           TextBuffer res = instance.toJava(indent, tracer);
 

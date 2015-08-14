@@ -160,6 +160,10 @@ public class VarProcessor {
     return this.lvt;
   }
 
+  public LVTVariable findLVT(int index, List<Integer> instructionOffsets) {
+    return this.lvt == null ? null : lvt.find(index, instructionOffsets);
+  }
+
   public int getRemapped(int index) {
     VarVersionPair res = varVersions.getMapOriginalVarIndices().get(index);
     if (res == null) return index;

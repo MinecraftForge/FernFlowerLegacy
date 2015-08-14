@@ -81,6 +81,16 @@ public class ClassWrapper {
 
       RootStatement root = null;
 
+      // if debug information present and should be used
+      if (DecompilerContext.getOption(IFernflowerPreferences.USE_DEBUG_VAR_NAMES)) {
+        StructLocalVariableTableAttribute attr = (StructLocalVariableTableAttribute)mt.getAttributes().getWithKey(
+          StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
+
+        if (attr != null) {
+          varProc.setLVT(attr.getLVT());
+        }
+      }
+
       boolean isError = false;
 
       try {
@@ -169,12 +179,11 @@ public class ClassWrapper {
           StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
 
         if (attr != null) {
-          varProc.setLVT(attr.getLVT());
           varProc.setDebugVarNames(attr.getMapVarNames());
         }
       }
 
-      MethodProcessorRunnable.printMethod(root, mt.getClassStruct().qualifiedName+"."+mt.getName()+mt.getDescriptor(),varProc);
+      //MethodProcessorRunnable.printMethod(root, mt.getClassStruct().qualifiedName+"."+mt.getName()+mt.getDescriptor(),varProc);
 
       DecompilerContext.getLogger().endMethod();
     }

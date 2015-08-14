@@ -38,6 +38,8 @@ import org.jetbrains.java.decompiler.struct.consts.PooledConstant;
 import org.jetbrains.java.decompiler.struct.consts.PrimitiveConstant;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
 
 import java.util.*;
 
@@ -725,6 +727,11 @@ public class ExprProcessor implements CodeConstants {
       return "void";
     }
     else if (tp == CodeConstants.TYPE_OBJECT) {
+      //if (type.signatureDebugGens != null) {
+      //  GenericType gen = new GenericType(type.signatureDebugGens);
+      //  return GenericMain.getGenericCastTypeName(gen);
+      //}
+
       String ret = buildJavaClassName(type.value);
       if (getShort) {
         ret = DecompilerContext.getImportCollector().getShortName(ret);

@@ -185,6 +185,16 @@ public class VarDefinitionHelper {
       // search for the first assignement to var [index]
       int addindex = 0;
       for (Exprent expr : lst) {
+        LVTVariable lvt = varproc.findLVT(index, first.getBasichead().getBlock().getInstrOldOffsets());
+        if (lvt != null) {
+          for (Exprent exp : expr.getAllExprents(true)) {
+            if (exp.type == Exprent.EXPRENT_VAR && ((VarExprent)exp).getIndex() == index) {
+              ((VarExprent)exp).setLVT(lvt);
+              break;
+            }
+          }
+        }
+
         if (setDefinition(expr, index)) {
           defset = true;
           break;

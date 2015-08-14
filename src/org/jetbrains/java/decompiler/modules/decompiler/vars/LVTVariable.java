@@ -68,7 +68,15 @@ public class LVTVariable implements Comparable<LVTVariable> {
     return 0;
   }
   @Override
-    public String toString() {
-        return "\'("+index+","+start+")"+desc+(sig!=null ? "<"+sig+"> ":" ")+name+"\'";
-    }
+  public String toString() {
+    return "\'("+index+","+start+")"+desc+(sig!=null ? "<"+sig+"> ":" ")+name+"\'";
+  }
+
+  public String getDesc() {
+    return desc;
+  }
+
+  public String getSig() {
+    return sig;
+  }
 }
