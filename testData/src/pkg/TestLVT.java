@@ -24,4 +24,13 @@ public class TestLVT {
             System.out.println(spam);
         }
     }
+    
+    public void methoda() {
+    	double a = 0D;
+    	double b = 1D;
+    	System.out.println(a+b);
+    	a = 0.1D;
+    	b = 1.1D;
+    	System.out.println(a+b);
+    }
 }

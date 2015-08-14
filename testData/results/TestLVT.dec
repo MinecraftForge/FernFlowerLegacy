@@ -23,7 +23,14 @@ public class TestLVT {
          String spam = scope1a + scope2 + scope2a + i + noise;
          System.out.println(spam);
       }
-        
+   }
+
+   public void methoda() {
+      double a = 0.0D;
+      double b = 1.0D;
+      System.out.println(a + b);
+      a = 0.1D;
+      b = 1.1D;
+      System.out.println(a + b);
    }
 }
-
