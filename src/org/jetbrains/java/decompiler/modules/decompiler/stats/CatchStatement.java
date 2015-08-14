@@ -60,15 +60,7 @@ public class CatchStatement extends Statement {
         stats.addWithKey(stat, stat.id);
         exctstrings.add(new ArrayList<String>(edge.getExceptions()));
 
-        int varIndex = -1;
-        BasicBlock block = stat.getBasichead().getBlock();
-        if (!block.getSeq().isEmpty() && block.getInstruction(0).opcode == CodeConstants.opc_astore) {
-          varIndex = block.getInstruction(0).getOperand(0);
-        }
-        else {
-          varIndex = DecompilerContext.getCounterContainer().getCounterAndIncrement(CounterContainer.VAR_COUNTER);
-        }
-        vars.add(new VarExprent(varIndex,
+        vars.add(new VarExprent(DecompilerContext.getCounterContainer().getCounterAndIncrement(CounterContainer.VAR_COUNTER),
                                 new VarType(CodeConstants.TYPE_OBJECT, 0, edge.getExceptions().get(0)),
                                 // FIXME: for now simply the first type. Should get the first common superclass when possible.
                                 (VarProcessor)DecompilerContext.getProperty(DecompilerContext.CURRENT_VAR_PROCESSOR)));
