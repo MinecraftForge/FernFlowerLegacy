@@ -243,7 +243,7 @@ public class MethodProcessorRunnable implements Runnable {
     System.out.println("}");
   }
 
-  private static void getOffset(Statement st, BitSet values) {
+  public static void getOffset(Statement st, BitSet values) {
     if (st instanceof DummyExitStatement && ((DummyExitStatement)st).bytecode != null)
       values.or(((DummyExitStatement)st).bytecode);
     if (st.getExprents() != null) {

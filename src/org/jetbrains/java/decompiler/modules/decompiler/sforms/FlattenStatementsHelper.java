@@ -227,7 +227,9 @@ public class FlattenStatementsHelper {
                 graph.nodes.putWithKey(nodeinit, nodeinit.id);
 
                 DirectNode nodecond = new DirectNode(DirectNode.NODE_CONDITION, stat, stat.id + "_cond");
-                nodecond.exprents = (stat.type == DoStatement.LOOP_FOREACH ? null : dostat.getConditionExprentList());
+                if (looptype != DoStatement.LOOP_FOREACH) {
+                  nodecond.exprents = dostat.getConditionExprentList();
+                }
                 graph.nodes.putWithKey(nodecond, nodecond.id);
 
                 DirectNode nodeinc = new DirectNode(DirectNode.NODE_INCREMENT, stat, stat.id + "_inc");

@@ -160,13 +160,20 @@ public class VarProcessor {
     return this.lvt;
   }
 
-  public LVTVariable findLVT(int index, List<Integer> instructionOffsets) {
-    return this.lvt == null ? null : lvt.find(index, instructionOffsets);
+  public LVTVariable findLVT(int index, Statement stat) {
+    return this.lvt == null ? null : lvt.find(index, stat);
   }
 
   public int getRemapped(int index) {
     VarVersionPair res = varVersions.getMapOriginalVarIndices().get(index);
     if (res == null) return index;
     return res.var;
+  }
+
+  public void copyVarInfo(VarVersionPair from, VarVersionPair to) {
+    setVarName(to, getVarName(from));
+    setVarFinal(to, getVarFinal(from));
+    setVarType(to, getVarType(from));
+    varVersions.getMapOriginalVarIndices().put(to.var, varVersions.getMapOriginalVarIndices().get(from.var));
   }
 }

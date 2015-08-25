@@ -1,10 +1,15 @@
 package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import org.jetbrains.java.decompiler.main.rels.MethodProcessorRunnable;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 
 public class LocalVariableTable {
   private Map<Integer, Set<LVTVariable>> startpoints;
@@ -35,15 +40,20 @@ public class LocalVariableTable {
     mapLVT = null; // Invalidate the cache and rebuild it.
   }
 
-  public LVTVariable find(int index, List<Integer> offsets) {
-    for (Integer offset : offsets) {
-      Set<LVTVariable> lvs = startpoints.get(offset);
-      if (lvs == null || lvs.isEmpty())
-        continue;
+  public LVTVariable find(int index, Statement stat) {
+    BitSet values = new BitSet();
+    MethodProcessorRunnable.getOffset(stat, values);
+    int start = values.nextSetBit(0);
+    int end = values.length()-1;
+    //System.out.println(indent + stat.getClass().getSimpleName() + " (" + start +", " + end + ")");
 
-      for (LVTVariable lv : lvs) {
-        if (lv.index == index)
-          return lv;
+    Map<Integer, List<LVTVariable>> map = getMapVarNames();
+    if (!map.containsKey(index)) {
+      return null;
+    }
+    for (LVTVariable lvt : map.get(index)) {
+      if (lvt.start >= start && lvt.end <= end) {
+        return lvt;
       }
     }
     return null;
@@ -75,6 +85,42 @@ public class LocalVariableTable {
   }
 
   public List<LVTVariable> getCandidates(int index) {
-    return mapLVT.get(index);
+    return getMapVarNames().get(index);
+  }
+
+  public List<LVTVariable> getVars(int index, int start, int end) {
+    if (!getMapVarNames().containsKey(index)) {
+      return null;
+    }
+
+    List<LVTVariable> ret = new ArrayList<LVTVariable>();
+    for (LVTVariable lvt : getMapVarNames().get(index)) {
+      if (lvt.start >= start && lvt.end <= end) {
+        ret.add(lvt);
+      }
+    }
+
+    return ret;
+  }
+
+  public Map<Integer, LVTVariable> getVars(Statement stat) {
+    BitSet values = new BitSet();
+    MethodProcessorRunnable.getOffset(stat, values);
+    int start = values.nextSetBit(0);
+    int end = values.length()-1;
+    //System.out.println(indent + stat.getClass().getSimpleName() + " (" + start +", " + end + ")");
+
+    Map<Integer, LVTVariable> ret = new HashMap<Integer, LVTVariable>();
+    for (Entry<Integer, List<LVTVariable>> entry : getMapVarNames().entrySet()) {
+      for (LVTVariable lvt : entry.getValue()) {
+        if (lvt.start >= start && lvt.end <= end) {
+          if (ret.containsKey(entry.getKey())) {
+            System.out.println("DUPLICATE INDEX WHAT THE FUCK: " + entry.getKey());
+          }
+          ret.put(entry.getKey(), lvt);
+        }
+      }
+    }
+    return ret;
   }
 }
