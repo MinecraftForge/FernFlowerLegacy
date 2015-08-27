@@ -18,6 +18,7 @@ package org.jetbrains.java.decompiler;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +30,12 @@ public class LVTTest extends SingleClassesTestBase {
     }};
   }
 
+  @Override
+    public void setUp() throws IOException {
+        super.setUp();
+        fixture.cleanup = false;
+    }
+  @Test public void testMatchLM() { doTest("pkg/TestLexManosLVT"); }
   @Test public void testMatch1() { doTest("pkg/TestLVT"); }
   @Test public void testMatch2() { doTest("pkg/TestLVTScoping"); }
 }
