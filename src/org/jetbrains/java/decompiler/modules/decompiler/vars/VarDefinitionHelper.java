@@ -556,7 +556,7 @@ public class VarDefinitionHelper {
   }
 
   private void setupLVTs(Statement stat) {
-    if (stat == null || varproc.getLVT() != null) {
+    if (stat == null || varproc.getLVT() == null) {
       return;
     }
 
