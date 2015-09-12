@@ -868,11 +868,11 @@ public class Statement implements IMatchable {
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public IMatchable findObject(MatchNode matchNode, int index) {
-    
+
     int node_type = matchNode.getType();
-    
+
     if (node_type == MatchNode.MATCHNODE_STATEMENT && !this.stats.isEmpty()) {
       String position = (String)matchNode.getRuleValue(MatchProperties.STATEMENT_POSITION);
       if(position != null) {
@@ -897,11 +897,11 @@ public class Statement implements IMatchable {
   }
 
   public boolean match(MatchNode matchNode, MatchEngine engine) {
-    
+
     if(matchNode.getType() != MatchNode.MATCHNODE_STATEMENT) {
       return false;
     }
-    
+
     for(Entry<MatchProperties, RuleValue> rule : matchNode.getRules().entrySet()) {
       switch(rule.getKey()) {
       case STATEMENT_TYPE:
@@ -932,14 +932,18 @@ public class Statement implements IMatchable {
         }
         break;
       }
-      
+
     }
-    
+
     return true;
   }
 
+  private SequenceStatement parentSeqStat;
 public SequenceStatement getParentSequenceStat() {
-    return (SequenceStatement) (getParent()!=null && getParent().type == TYPE_SEQUENCE ? getParent() : null);
+    if (parentSeqStat == null) {
+        parentSeqStat = (getParent()!=null && getParent().type == TYPE_SEQUENCE) ? (SequenceStatement)getParent() : new SequenceStatement(Arrays.asList(this));
+    }
+    return parentSeqStat;
 }
 
 }
