@@ -862,9 +862,9 @@ public class Statement implements IMatchable {
 
   // helper methods
   public String toString() {
-    return id.toString();
+    return String.format("{%d}:%d", type, id);
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
@@ -937,5 +937,9 @@ public class Statement implements IMatchable {
     
     return true;
   }
-  
+
+public SequenceStatement getParentSequenceStat() {
+    return (SequenceStatement) (getParent()!=null && getParent().type == TYPE_SEQUENCE ? getParent() : null);
+}
+
 }

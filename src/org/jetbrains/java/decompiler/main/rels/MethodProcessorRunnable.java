@@ -153,7 +153,7 @@ public class MethodProcessorRunnable implements Runnable {
 
       varProc.setVarVersions(root);
 
-      if (!new PPandMMHelper().findPPandMM(root)) {
+      if (!new PPandMMHelper(varProc).findPPandMM(root)) {
         break;
       }
     }

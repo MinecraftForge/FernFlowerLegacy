@@ -42,34 +42,34 @@ public class LVTVariable implements Comparable<LVTVariable> {
   public boolean equals(Object obj) {
     if (!(obj instanceof LVTVariable))
       return false;
-    return ((LVTVariable) obj).index == index && ((LVTVariable) obj).start == start;
+    return ((LVTVariable) obj).index == index && ((LVTVariable) obj).end == end;
   }
 
   @Override
   public int hashCode() {
-    return index * 31 + start;
+    return index * 31 + end;
   }
 
-  public void addTo(Map<Integer, Set<LVTVariable>> startpoints) {
-    Set<LVTVariable> starts = startpoints.get(this.start);
-    if (starts == null) {
-      starts = new HashSet<LVTVariable>();
-      startpoints.put(this.start, starts);
+  public void addTo(Map<Integer, Set<LVTVariable>> endpoints) {
+    Set<LVTVariable> ends = endpoints.get(this.end);
+    if (ends == null) {
+      ends = new HashSet<LVTVariable>();
+      endpoints.put(this.end, ends);
     }
-    starts.add(this);
+    ends.add(this);
   }
 
   @Override
   public int compareTo(LVTVariable o) {
-    if (o.start > start) return -1;
-    if (o.start < start) return 1;
+    if (o.end > end) return -1;
+    if (o.end < end) return 1;
     if (o.index > index) return -1;
     if (o.index < index) return 1;
     return 0;
   }
   @Override
   public String toString() {
-    return "\'("+index+","+start+")"+desc+(sig!=null ? "<"+sig+"> ":" ")+name+"\'";
+    return "\'("+index+","+end+")"+desc+(sig!=null ? "<"+sig+"> ":" ")+name+"\'";
   }
 
   public String getDesc() {

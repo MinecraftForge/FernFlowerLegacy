@@ -53,7 +53,7 @@ public class VarVersionsProcessor {
     typeProcessor = new VarTypeProcessor();
     typeProcessor.calculateVarTypes(root, graph);
 
-    simpleMerge(typeProcessor, graph, mt);
+//    simpleMerge(typeProcessor, graph, mt);
 
     // FIXME: advanced merging
 
@@ -103,7 +103,7 @@ public class VarVersionsProcessor {
     updateVersions(graph, phiVersions);
   }
 
-  private static void updateVersions(DirectGraph graph, final Map<VarVersionPair, Integer> versions) {
+  public static void updateVersions(DirectGraph graph, final Map<VarVersionPair, Integer> versions) {
     graph.iterateExprents(new DirectGraph.ExprentIterator() {
       @Override
       public int processExprent(Exprent exprent) {

@@ -29,26 +29,28 @@ public class TestLexManosLVT {
 
       }
       switch(Bob.HI) {
-      case HI:         System.out.println("HI");
+      case HI:
+         System.out.println("HI");
          break;
       case LO:
-         System.out.println("LO");
-      }
+         System.out.println("LO");      }
 
       if(TestLexManosLVT.Bob.HI == TestLexManosLVT.Bob.HI) {
          String a = "a";
       } else {
-         String b = "b";      }
+         String b = "b";
+      }
       String a2;
       if(TestLexManosLVT.Bob.HI == TestLexManosLVT.Bob.HI) {
             a2 = "a";
       } else {            a2 = "b";
       }
       if (TestLexManosLVT.Bob.HI == TestLexManosLVT.Bob.HI) {
-         a2 = "a";
-      }
+         a2 = "a";      }
       System.out.println(a2);   }   private static enum Bob {      HI,      LO;
       static {
+
+
          for(TestLexManosLVT.Bob b : values()) {
             for(TestLexManosLVT.Bob c : values()) {
                for(TestLexManosLVT.Bob d : values()) {

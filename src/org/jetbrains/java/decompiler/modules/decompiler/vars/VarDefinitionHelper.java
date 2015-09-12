@@ -16,6 +16,7 @@
 package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
@@ -23,9 +24,13 @@ import org.jetbrains.java.decompiler.main.rels.MethodProcessorRunnable;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.sforms.DirectGraph;
+import org.jetbrains.java.decompiler.modules.decompiler.sforms.FlattenStatementsHelper;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchAllStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructMethod;
@@ -47,12 +52,13 @@ public class VarDefinitionHelper {
 
   private final CounterContainer counters = DecompilerContext.getCounterContainer();
 
+  private final Map<SequenceStatement,List<VarVersionPair>> scopedVVPs;
   public VarDefinitionHelper(Statement root, StructMethod mt, VarProcessor varproc) {
 
     mapVarDefStatements = new HashMap<Integer, Statement>();
     mapStatementVars = new HashMap<Integer, HashSet<Integer>>();
     implDefVars = new HashSet<Integer>();
-
+    scopedVVPs = new HashMap<SequenceStatement,List<VarVersionPair>>();
     this.varproc = varproc;
 
     VarNamesCollector vc = DecompilerContext.getVarNamesCollector();
@@ -70,10 +76,21 @@ public class VarDefinitionHelper {
 
     // method parameters are implicitly defined
     int varindex = 0;
+    Statement seq = root.getFirst();
+    SequenceStatement seqStat = null;
+    if (seq.type == Statement.TYPE_SEQUENCE) {
+        seqStat = (SequenceStatement) seq;
+    }
     for (int i = 0; i < paramcount; i++) {
       implDefVars.add(varindex);
-      varproc.setVarName(new VarVersionPair(varindex, 0), vc.getFreeName(varindex));
-
+      VarVersionPair vvp = new VarVersionPair(varindex, 0);
+      varproc.setVarName(vvp, vc.getFreeName(varindex));
+      if (seqStat != null) {
+          if (scopedVVPs.get(seqStat) == null) {
+              scopedVVPs.put(seqStat,new ArrayList<VarVersionPair>());
+          }
+          scopedVVPs.get(seqStat).add(vvp);
+      }
       if (thisvar) {
         if (i == 0) {
           varindex++;
@@ -115,7 +132,8 @@ public class VarDefinitionHelper {
       if (lstVars != null) {
         for (VarExprent var : lstVars) {
           implDefVars.add(var.getIndex());
-          varproc.setVarName(new VarVersionPair(var), vc.getFreeName(var.getIndex()));
+          VarVersionPair pair = new VarVersionPair(var);
+          varproc.setVarName(pair, vc.getFreeName(var.getIndex()));
           var.setDefinition(true);
         }
       }
@@ -127,12 +145,18 @@ public class VarDefinitionHelper {
   }
 
   public void setVarDefinitions() {
+    FlattenStatementsHelper flattenHelper = new FlattenStatementsHelper();
+    DirectGraph graph = flattenHelper.buildDirectGraph(root);
 
     VarNamesCollector vc = DecompilerContext.getVarNamesCollector();
 
     for (Entry<Integer, Statement> en : mapVarDefStatements.entrySet()) {
       Statement stat = en.getValue();
       Integer index = en.getKey();
+      int newindex = varproc.getRemapped(index);
+      if (index.intValue() != newindex) {
+          // remerge
+      }
 
       setupLVTs(stat);
 
@@ -215,17 +239,9 @@ public class VarDefinitionHelper {
         var.setDefinition(true);
 
         if (varproc.getLVT() != null) {
-          BitSet values = new BitSet();
-          MethodProcessorRunnable.getOffset(stat, values);
-          int start = values.nextSetBit(0);
-          int end = values.length()-1;
-          List<LVTVariable> vars = varproc.getLVT().getVars(index, start, end);
-          if (vars != null) {
-            if (vars.size() == 1) {
-              var.setLVT(vars.get(0));
-            }
-            // ToDo: If this is >1 then we need to decrease the scope of these variables.
-            //if this is = 0 and we have lvts for this... then we need to expand the scope...
+          Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat.getParentSequenceStat());
+          if (vars.containsKey(var.getIndex())) {
+              var.setLVT(vars.get(var.getIndex()));
           }
         }
 
@@ -393,12 +409,17 @@ public class VarDefinitionHelper {
   private Map<VarVersionPair, Boolean> splitVaribles(Statement stat, String indent) {
     Map<VarVersionPair, Boolean> vars = new HashMap<VarVersionPair, Boolean>();
 
+    SequenceStatement seqStat = stat.getParentSequenceStat();
     //BitSet values = new BitSet();
     //MethodProcessorRunnable.getOffset(stat, values);
     //int start = values.nextSetBit(0);
     //int end = values.length()-1;
     //System.out.println(indent + stat.getClass().getSimpleName() + " (" + start +", " + end + ")");
-
+    if (seqStat != null) {
+        if (!scopedVVPs.containsKey(stat.getBasichead())) {
+            scopedVVPs.put(seqStat, new ArrayList<VarVersionPair>());
+        }
+    }
     if (stat.type == Statement.TYPE_DO) {
       DoStatement dost = (DoStatement)stat;
       if (dost.getLooptype() == DoStatement.LOOP_FOREACH) {
@@ -443,6 +464,9 @@ public class VarDefinitionHelper {
         for (Entry<VarVersionPair, Boolean> entry : var.entrySet()) {
           if (!vars.containsKey(entry.getKey())) {
             vars.put(entry.getKey(), entry.getValue());
+            if (seqStat != null) {
+                scopedVVPs.get(seqStat).add(entry.getKey());
+            }
           }
         }
       }
@@ -560,7 +584,9 @@ public class VarDefinitionHelper {
       return;
     }
 
-    Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat);
+    Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat.getParentSequenceStat());
+    List<VarVersionPair> vvps = scopedVVPs.get(stat.getBasichead());
+
     if (stat.getExprents() == null) {
       for (Object obj : stat.getSequentialObjects()) {
         if (obj instanceof Statement) {

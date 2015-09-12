@@ -12,11 +12,11 @@ public class TestLVTScoping {
       System.out.println(a);
    }
 
-   public static void method2() {      String a;
+   public static void method2() {
       if(1 == Integer.valueOf(1).intValue()) {
-         a = "YAY";
+         String a = "YAY";
       } else {
-         a = "NAY";
+         String a = "NAY";
          System.out.println(a);
       }   }
 
