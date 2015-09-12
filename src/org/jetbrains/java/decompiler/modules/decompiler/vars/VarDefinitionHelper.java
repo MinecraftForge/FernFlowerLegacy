@@ -16,21 +16,14 @@
 package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
-import org.jetbrains.java.decompiler.code.cfg.BasicBlock;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
-import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
-import org.jetbrains.java.decompiler.main.rels.MethodProcessorRunnable;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
-import org.jetbrains.java.decompiler.modules.decompiler.sforms.DirectGraph;
-import org.jetbrains.java.decompiler.modules.decompiler.sforms.FlattenStatementsHelper;
-import org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchAllStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
-import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructClass;
@@ -39,6 +32,7 @@ import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.AbstractMap.SimpleImmutableEntry;
 
 public class VarDefinitionHelper {
 
@@ -51,19 +45,12 @@ public class VarDefinitionHelper {
 
   private final VarProcessor varproc;
 
-  private final CounterContainer counters = DecompilerContext.getCounterContainer();
-
-  private final Map<SequenceStatement,List<VarVersionPair>> scopedVVPs;
-
-private RootStatement rootStmt;
   public VarDefinitionHelper(Statement root, StructMethod mt, VarProcessor varproc) {
 
     mapVarDefStatements = new HashMap<Integer, Statement>();
     mapStatementVars = new HashMap<Integer, HashSet<Integer>>();
     implDefVars = new HashSet<Integer>();
-    scopedVVPs = new HashMap<SequenceStatement,List<VarVersionPair>>();
     this.varproc = varproc;
-    this.rootStmt = (RootStatement) root;
 
     VarNamesCollector vc = DecompilerContext.getVarNamesCollector();
 
@@ -80,21 +67,10 @@ private RootStatement rootStmt;
 
     // method parameters are implicitly defined
     int varindex = 0;
-    Statement seq = root.getFirst();
-    SequenceStatement seqStat = null;
-    if (seq.type == Statement.TYPE_SEQUENCE) {
-        seqStat = (SequenceStatement) seq;
-    }
     for (int i = 0; i < paramcount; i++) {
       implDefVars.add(varindex);
       VarVersionPair vvp = new VarVersionPair(varindex, 0);
       varproc.setVarName(vvp, vc.getFreeName(varindex));
-      if (seqStat != null) {
-          if (scopedVVPs.get(seqStat) == null) {
-              scopedVVPs.put(seqStat,new ArrayList<VarVersionPair>());
-          }
-          scopedVVPs.get(seqStat).add(vvp);
-      }
       if (thisvar) {
         if (i == 0) {
           varindex++;
@@ -116,7 +92,7 @@ private RootStatement rootStmt;
       vc.addName("this");
     }
 
-    splitVaribles(root, "");
+    mergeVars(root);
 
     // catch variables are implicitly defined
     LinkedList<Statement> stack = new LinkedList<Statement>();
@@ -407,192 +383,12 @@ private RootStatement rootStmt;
     return false;
   }
 
-  //We merge variables together earlier to make ++ and -- work, we need to now
-  // split them using the LVT data and full method structure into separate versions.
-  // this also allows us to re-index/version variables that were not done
-  // before such as exceptions.
-  // Return value of referenced variables
-  //  The boolean is 'isAssignment', true if first reference is assignment, false if just reference.
-  private Map<VarVersionPair, Boolean> splitVaribles(Statement stat, String indent) {
-    Map<VarVersionPair, Boolean> vars = new HashMap<VarVersionPair, Boolean>();
-
-    SequenceStatement seqStat = stat.getParentSequenceStat();
-    //BitSet values = new BitSet();
-    //MethodProcessorRunnable.getOffset(stat, values);
-    //int start = values.nextSetBit(0);
-    //int end = values.length()-1;
-    //System.out.println(indent + stat.getClass().getSimpleName() + " (" + start +", " + end + ")");
-    if (seqStat != null) {
-        if (!scopedVVPs.containsKey(stat.getBasichead())) {
-            scopedVVPs.put(seqStat, new ArrayList<VarVersionPair>());
-        }
-    }
-    if (stat.type == Statement.TYPE_DO) {
-      DoStatement dost = (DoStatement)stat;
-      if (dost.getLooptype() == DoStatement.LOOP_FOREACH) {
-        vars.put(new VarVersionPair((VarExprent)dost.getInitExprent()), true);
-        splitExprent(dost.getIncExprent(), vars, indent);
-      }
-      else if (dost.getLooptype() == DoStatement.LOOP_FOR) {
-        splitExprent(dost.getInitExprent(), vars, indent);
-        splitExprent(dost.getConditionExprent(), vars, indent);
-        splitExprent(dost.getIncExprent(), vars, indent);
-      }
-      else if (dost.getLooptype() == DoStatement.LOOP_WHILE) {
-        splitExprent(dost.getConditionExprent(), vars, indent);
-      }
-    }
-
-    if (stat.getExprents() == null) {
-      List<Statement> stats = stat.getStats();
-      List<Map<VarVersionPair, Boolean>> stat_vars = new ArrayList<Map<VarVersionPair, Boolean>>(stats.size());
-
-      for (Statement st : stats) {
-        stat_vars.add(splitVaribles(st, "  " + indent));
-      }
-
-      for (int x = 0; x < stats.size(); x++) {
-        switch (stats.get(x).type) {
-          case Statement.TYPE_DO: {
-            DoStatement dost = (DoStatement)stats.get(x);
-            VarVersionPair init = extractVar(dost.getInitExprent());
-            if (init != null && (dost.getLooptype() == DoStatement.LOOP_FOR || dost.getLooptype()== DoStatement.LOOP_FOREACH)) {
-              if (safeToRename(init, stats, stat_vars, x)) {
-                VarVersionPair newIndex = new VarVersionPair(counters.getCounterAndIncrement(CounterContainer.VAR_COUNTER), 0);
-                remapVar(init, newIndex, stats.get(x), stat_vars.get(x));
-              }
-            }
-            break;
-          }
-        }
-      }
-
-      for (Map<VarVersionPair, Boolean> var : stat_vars) {
-        for (Entry<VarVersionPair, Boolean> entry : var.entrySet()) {
-          if (!vars.containsKey(entry.getKey())) {
-            vars.put(entry.getKey(), entry.getValue());
-            if (seqStat != null) {
-                scopedVVPs.get(seqStat).add(entry.getKey());
-            }
-          }
-        }
-      }
-    }
-    else {
-      for (Exprent e : stat.getExprents()) {
-        splitExprent(e, vars, indent);
-      }
-    }
-
-    if (stat.type == Statement.TYPE_DO) {
-      DoStatement dost = (DoStatement)stat;
-      if (dost.getLooptype() == DoStatement.LOOP_DOWHILE) {
-        splitExprent(dost.getConditionExprent(), vars, indent);
-      }
-    }
-
-    //for (Map.Entry<VarVersionPair, Boolean> entry : vars.entrySet()) {
-    //  System.out.println(indent + "  " + (entry.getValue() ? "ass " : "ref ") + entry.getKey());
-    //}
-
-    return vars;
-  }
-
-  private static void splitExprent(Exprent e, Map<VarVersionPair, Boolean> map, String indent) {
-    if (e == null)
-      return;
-    if (e.type == Exprent.EXPRENT_ASSIGNMENT && ((AssignmentExprent)e).getLeft().type == Exprent.EXPRENT_VAR) {
-      VarVersionPair var = new VarVersionPair((VarExprent)((AssignmentExprent)e).getLeft());
-      if (!map.containsKey(var)) {
-        map.put(var, true);
-      }
-      splitExprent(((AssignmentExprent)e).getRight(), map, indent);
-    }
-    else {
-      for (VarVersionPair var : e.getAllVariables()) {
-        if (!map.containsKey(var)) {
-          map.put(var, false);
-        }
-      }
-    }
-  }
-
-  private static VarVersionPair extractVar(Exprent exp) {
-    if (exp == null) {
-      return null;
-    }
-    if (exp.type == Exprent.EXPRENT_ASSIGNMENT && ((AssignmentExprent)exp).getLeft().type == Exprent.EXPRENT_VAR) {
-      return new VarVersionPair((VarExprent)((AssignmentExprent)exp).getLeft());
-    }
-    else if (exp.type == Exprent.EXPRENT_VAR) {
-      return new VarVersionPair((VarExprent)exp);
-    }
-    return null;
-  }
-
-  private static boolean safeToRename(VarVersionPair var, List<Statement> stats, List<Map<VarVersionPair, Boolean>> list, int index) {
-    for (int x = index + 1; x < list.size(); x++) {
-      Map<VarVersionPair, Boolean> map = list.get(x);
-      if (map.containsKey(var)) {
-        return map.get(var);
-      }
-    }
-    return false;
-  }
-
-  private void remapVar(VarVersionPair from, VarVersionPair to, Statement stat, Map<VarVersionPair, Boolean> stats) {
-    remapVar(from, to, stat);
-    varproc.copyVarInfo(from, to);
-    stats.put(to, true);
-    stats.remove(from);
-  }
-
-  private static void remapVar(VarVersionPair from, VarVersionPair to, Statement stat) {
-    if (stat == null) {
-      return;
-    }
-    if (stat.getExprents() == null) {
-      for (Object obj : stat.getSequentialObjects()) {
-        if (obj instanceof Statement) {
-          remapVar(from, to, (Statement)obj);
-        }
-        else if (obj instanceof Exprent) {
-          remapVar(from, to, (Exprent)obj);
-        }
-      }
-    }
-    else {
-      for (Exprent exp : stat.getExprents()) {
-        remapVar(from, to, exp);
-      }
-    }
-  }
-
-  private static void remapVar(VarVersionPair from, VarVersionPair to, Exprent exprent) {
-    if (exprent == null) {
-      return;
-    }
-    List<Exprent> lst = exprent.getAllExprents(true);
-    lst.add(exprent);
-
-    for (Exprent expr : lst) {
-      if (expr.type == Exprent.EXPRENT_VAR) {
-        VarExprent var = (VarExprent)expr;
-        if (var.getIndex() == from.var && var.getVersion() == from.version) {
-          var.setIndex(to.var);
-          var.setVersion(to.version);
-        }
-      }
-    }
-  }
-
   private void setupLVTs(Statement stat) {
     if (stat == null || varproc.getLVT() == null) {
       return;
     }
 
     Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat.getParentSequenceStat());
-    List<VarVersionPair> vvps = scopedVVPs.get(stat.getBasichead());
 
     if (stat.getExprents() == null) {
       for (Object obj : stat.getSequentialObjects()) {
@@ -625,6 +421,91 @@ private RootStatement rootStmt;
         LVTVariable lvt = lvts.get(index);
         if (lvt != null) {
           var.setLVT(lvt);
+        }
+      }
+    }
+  }
+
+  private void mergeVars(Statement stat) {
+    if (stat.getExprents() == null) {
+      for (Object obj : stat.getSequentialObjects()) {
+        if (obj instanceof Statement) {
+          mergeVars((Statement)obj);
+        }
+        else if (obj instanceof AssignmentExprent) {
+          remapVar(checkAssignment((AssignmentExprent)obj), stat.getParent());
+        }
+      }
+    }
+    else {
+      for (Exprent exp : stat.getExprents()) {
+        if (exp instanceof AssignmentExprent) {
+          remapVar(checkAssignment((AssignmentExprent)exp), stat.getParent());
+        }
+      }
+    }
+  }
+
+  private Map.Entry<VarVersionPair, VarVersionPair> checkAssignment(AssignmentExprent exp) {
+    if (exp.getLeft().type != Exprent.EXPRENT_VAR) {
+      return null;
+    }
+
+    VarExprent left = (VarExprent)exp.getLeft();
+    VarExprent right = null;
+    int index = varproc.getRemapped(left.getIndex());
+
+    for (Exprent e : exp.getRight().getAllExprents(true)) {
+      if (e.type == Exprent.EXPRENT_VAR) {
+        if (varproc.getRemapped(((VarExprent)e).getIndex()) == index) {
+          right = (VarExprent)e;
+          break;
+        }
+      }
+    }
+
+    if (right == null) {
+      return null;
+    }
+
+    return new SimpleImmutableEntry<VarVersionPair, VarVersionPair>(new VarVersionPair(left), new VarVersionPair(right));
+  }
+
+  private static void remapVar(Entry<VarVersionPair, VarVersionPair> remap, Statement stat) {
+    if (remap == null || stat == null) {
+      return;
+    }
+
+    if (stat.getExprents() == null) {
+      for (Object obj : stat.getSequentialObjects()) {
+        if (obj instanceof Statement) {
+          remapVar(remap, (Statement)obj);
+        }
+        else if (obj instanceof Exprent) {
+          remapVar(remap.getKey(), remap.getValue(), (Exprent)obj);
+        }
+      }
+    }
+    else {
+      for (Exprent exp : stat.getExprents()) {
+        remapVar(remap.getKey(), remap.getValue(), exp);
+      }
+    }
+  }
+
+  private static void remapVar(VarVersionPair from, VarVersionPair to, Exprent exprent) {
+    if (exprent == null) {
+      return;
+    }
+    List<Exprent> lst = exprent.getAllExprents(true);
+    lst.add(exprent);
+
+    for (Exprent expr : lst) {
+      if (expr.type == Exprent.EXPRENT_VAR) {
+        VarExprent var = (VarExprent)expr;
+        if (var.getIndex() == from.var && var.getVersion() == from.version) {
+          var.setIndex(to.var);
+          var.setVersion(to.version);
         }
       }
     }
