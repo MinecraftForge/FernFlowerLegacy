@@ -50,11 +50,12 @@ public class LVTVariable implements Comparable<LVTVariable> {
     return index * 31 + end;
   }
 
-  public void addTo(Map<Integer, Set<LVTVariable>> endpoints) {
-    Set<LVTVariable> ends = endpoints.get(this.end);
+  public void addTo(Map<StartEndPair, Set<LVTVariable>> endpoints) {
+    StartEndPair sepair = new StartEndPair(this.start, this.end);
+    Set<LVTVariable> ends = endpoints.get(sepair);
     if (ends == null) {
       ends = new HashSet<LVTVariable>();
-      endpoints.put(this.end, ends);
+      endpoints.put(sepair, ends);
     }
     ends.add(this);
   }
