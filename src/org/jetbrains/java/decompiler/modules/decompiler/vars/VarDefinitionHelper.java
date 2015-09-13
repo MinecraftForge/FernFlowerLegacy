@@ -127,13 +127,13 @@ public class VarDefinitionHelper {
   public void setVarDefinitions() {
     VarNamesCollector vc = DecompilerContext.getVarNamesCollector();
 
-    Map<SequenceStatement,Map<Integer,VarExprent>> trackingMap = new HashMap<SequenceStatement,Map<Integer,VarExprent>>();
+    Map<Statement,Map<Integer,VarExprent>> trackingMap = new HashMap<Statement,Map<Integer,VarExprent>>();
     for (Entry<Integer, Statement> en : mapVarDefStatements.entrySet()) {
       Statement stat = en.getValue();
-      if (!trackingMap.containsKey(stat.getParentSequenceStat())) {
-          trackingMap.put(stat.getParentSequenceStat(), new HashMap<Integer,VarExprent>());
+      if (!trackingMap.containsKey(stat)) {
+          trackingMap.put(stat, new HashMap<Integer,VarExprent>());
       }
-      Map<Integer, VarExprent> scopedMap = trackingMap.get(stat.getParentSequenceStat());
+      Map<Integer, VarExprent> scopedMap = trackingMap.get(stat);
       Integer index = en.getKey();
       int newindex = varproc.getRemapped(index);
       setupLVTs(stat);
@@ -221,7 +221,7 @@ public class VarDefinitionHelper {
         var.setDefinition(true);
 
         if (varproc.getLVT() != null) {
-          Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat.getParentSequenceStat());
+          Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat);
           if (vars.containsKey(var.getIndex())) {
               var.setLVT(vars.get(var.getIndex()));
           }
@@ -388,7 +388,7 @@ public class VarDefinitionHelper {
       return;
     }
 
-    Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat.getParentSequenceStat());
+    Map<Integer, LVTVariable> vars = varproc.getLVT().getVars(stat);
 
     if (stat.getExprents() == null) {
       for (Object obj : stat.getSequentialObjects()) {
@@ -421,6 +421,8 @@ public class VarDefinitionHelper {
         LVTVariable lvt = lvts.get(index);
         if (lvt != null) {
           var.setLVT(lvt);
+        } else {
+            System.currentTimeMillis();
         }
       }
     }

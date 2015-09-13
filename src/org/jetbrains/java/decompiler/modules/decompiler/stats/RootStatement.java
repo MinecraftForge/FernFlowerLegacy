@@ -18,6 +18,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.stats;
 import org.jetbrains.java.decompiler.main.TextBuffer;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 
 
 public class RootStatement extends Statement {
@@ -46,4 +47,9 @@ public class RootStatement extends Statement {
   public void setDummyExit(DummyExitStatement dummyExit) {
     this.dummyExit = dummyExit;
   }
+
+  @Override
+    public StartEndPair getStartEndRange() {
+        return first.getStartEndRange();
+    }
 }

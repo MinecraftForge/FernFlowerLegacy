@@ -15,4 +15,19 @@ public class StartEndPair {
     public int hashCode() {
         return start * 31 + end;
     }
+    @Override
+    public String toString() {
+        return String.format("%d->%d",start,end);
+    }
+
+    public static StartEndPair join(StartEndPair... pairs) {
+        int start = Integer.MAX_VALUE;
+        int end = Integer.MIN_VALUE;
+        for (StartEndPair pair : pairs) {
+            if (pair == null) continue;
+            start = Math.min(start, pair.start);
+            end = Math.max(end, pair.end);
+        }
+        return new StartEndPair(start, end);
+    }
 }

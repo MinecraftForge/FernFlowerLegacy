@@ -24,6 +24,7 @@ import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
 import org.jetbrains.java.decompiler.modules.decompiler.StrongConnectivityHelper;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 import org.jetbrains.java.decompiler.struct.match.IMatchable;
 import org.jetbrains.java.decompiler.struct.match.MatchEngine;
 import org.jetbrains.java.decompiler.struct.match.MatchNode;
@@ -938,12 +939,17 @@ public class Statement implements IMatchable {
     return true;
   }
 
-  private SequenceStatement parentSeqStat;
-public SequenceStatement getParentSequenceStat() {
-    if (parentSeqStat == null) {
-        parentSeqStat = (getParent()!=null && getParent().type == TYPE_SEQUENCE) ? (SequenceStatement)getParent() : new SequenceStatement(Arrays.asList(this));
-    }
-    return parentSeqStat;
-}
-
+  private StartEndPair endpoints;
+  public StartEndPair getStartEndRange() {
+      if (endpoints == null) {
+          int start = Integer.MAX_VALUE;
+          int end = Integer.MIN_VALUE;
+          for (Statement st : getStats()) {
+              start = Math.min(start, st.getBasichead().getBlock().getStartInstruction());
+              end = Math.max(end, st.getBasichead().getBlock().getEndInstruction());
+          }
+          endpoints = new StartEndPair(start,end);
+      }
+      return endpoints;
+  }
 }

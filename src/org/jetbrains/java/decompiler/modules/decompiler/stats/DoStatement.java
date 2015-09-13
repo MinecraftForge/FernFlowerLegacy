@@ -21,6 +21,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -241,4 +242,9 @@ public class DoStatement extends Statement {
   public void setLooptype(int looptype) {
     this.looptype = looptype;
   }
+
+  @Override
+    public StartEndPair getStartEndRange() {
+        return super.getStartEndRange();
+    }
 }

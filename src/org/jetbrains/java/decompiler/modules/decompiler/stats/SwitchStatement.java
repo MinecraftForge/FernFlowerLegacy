@@ -27,6 +27,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.ConstExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.SwitchExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 
 import java.util.*;
@@ -365,4 +366,15 @@ public class SwitchStatement extends Statement {
   public List<List<ConstExprent>> getCaseValues() {
     return caseValues;
   }
+
+  @Override
+    public StartEndPair getStartEndRange() {
+      StartEndPair[] sepairs = new StartEndPair[caseStatements.size() + 1];
+      int i = 0;
+      sepairs[i++] = super.getStartEndRange();
+      for (Statement st : caseStatements) {
+          sepairs[i++] = st.getStartEndRange();
+      }
+      return StartEndPair.join(sepairs);
+    }
 }

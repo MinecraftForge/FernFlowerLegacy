@@ -20,6 +20,7 @@ import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.modules.decompiler.DecHelper;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 
 import java.util.Arrays;
 import java.util.List;
@@ -137,4 +138,9 @@ public class SequenceStatement extends Statement {
   public Statement getSimpleCopy() {
     return new SequenceStatement();
   }
+
+  @Override
+    public StartEndPair getStartEndRange() {
+        return super.getStartEndRange();
+    }
 }

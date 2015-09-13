@@ -3,6 +3,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.vars;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,18 +89,10 @@ public class LocalVariableTable {
     return getMapVarNames().get(index);
   }
 
-  public Map<Integer, LVTVariable> getVars(SequenceStatement sequenceStatement) {
-      if (sequenceStatement == null) return new HashMap<Integer, LVTVariable>();
-      int start = Integer.MAX_VALUE;
-      int end = Integer.MIN_VALUE;
-      for (Statement st : sequenceStatement.getStats()) {
-          start = Math.min(start, st.getBasichead().getBlock().getStartInstruction());
-          end = Math.max(end, st.getBasichead().getBlock().getEndInstruction());
-      }
-    //System.out.println(indent + stat.getClass().getSimpleName() + " (" + start +", " + end + ")");
-
-    StartEndPair sepair = new StartEndPair(start, end);
-    Map<Integer, LVTVariable> ret = new HashMap<Integer, LVTVariable>();
+  public Map<Integer, LVTVariable> getVars(Statement statement) {
+      HashMap<Integer,LVTVariable> ret = new HashMap<Integer,LVTVariable>();
+      if (statement == null) return ret;
+      StartEndPair sepair = statement.getStartEndRange();
     if (endpoints.containsKey(sepair)) {
         for (LVTVariable lvt : endpoints.get(sepair)) {
             ret.put(lvt.index,lvt);
