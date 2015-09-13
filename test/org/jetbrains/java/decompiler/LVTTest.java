@@ -35,7 +35,10 @@ public class LVTTest extends SingleClassesTestBase {
         super.setUp();
         fixture.cleanup = false;
     }
-  @Test public void testMatchLM() { doTest("pkg/TestLexManosLVT"); }
-  @Test public void testMatch1() { doTest("pkg/TestLVT"); }
-  @Test public void testMatch2() { doTest("pkg/TestLVTScoping"); }
+  @Test public void testMatch1() { doTest("pkg/TestPPMM"); }
+//  @Test public void testMatchLM() { doTest("pkg/TestLexManosLVT"); }
+//  @Test public void testMatch1() { doTest("pkg/TestLVT"); }
+//  @Test public void testMatch2() { doTest("pkg/TestLVTScoping"); }
+//  @Test public void testMCWorld() { doTest("net/minecraft/world/World"); }
+//  @Test public void testMCGuiCmdBlock() { doTest("net/minecraft/client/gui/GuiCommandBlock"); }
 }
