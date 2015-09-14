@@ -157,7 +157,11 @@ public class PPandMMHelper {
 
               exprentReplaced = true;
               if (!left.equals(econd)) {
-                remaps.put(new VarVersionPair((VarExprent)left), new VarVersionPair((VarExprent)econd));
+                VarVersionPair _old = new VarVersionPair((VarExprent)left);
+                VarVersionPair _new = new VarVersionPair((VarExprent)econd);
+                if (_old.var > _new.var) { // Try and prevent infinite loops here by only merging 'down'
+                  remaps.put(_old, _new);
+                }
               }
               return ret;
             }
