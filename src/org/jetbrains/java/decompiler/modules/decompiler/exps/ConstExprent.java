@@ -416,6 +416,11 @@ public class ConstExprent extends Exprent {
     measureBytecode(values);
   }
 
+  @Override
+  public String toString() {
+    return "const(" + toJava(0, new BytecodeMappingTracer()) + ")";
+  }
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************

@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class PPandMMHelper {
 
@@ -183,13 +184,23 @@ public class PPandMMHelper {
 
     VarExprent v1 = (VarExprent)e1;
     VarExprent v2 = (VarExprent)e2;
-    return varProc.getRemapped(v1.getIndex()) == varProc.getRemapped(v2.getIndex())
-            && InterpreterUtil.equalObjects(v1.getVarType(), v2.getVarType());
+    return varProc.getRemapped(v1.getIndex()) == varProc.getRemapped(v2.getIndex());
+    //Probably should up this to checking if the types are in the same family, Like byte == int == long
+            //&& InterpreterUtil.equalObjects(v1.getVarType(), v2.getVarType());
   }
 
 
   private void updateVersions(DirectGraph graph) {
     if (remaps.isEmpty()) return;
+
+    for (Entry<VarVersionPair, VarVersionPair> remap : remaps.entrySet()) {
+      VarVersionPair target = remap.getValue();
+      while (remaps.containsKey(target)) {
+        target = remaps.get(target);
+      }
+      remaps.put(remap.getKey(), target);
+    }
+
     graph.iterateExprents(new DirectGraph.ExprentIterator() {
       @Override
       public int processExprent(Exprent exprent) {
