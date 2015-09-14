@@ -39,7 +39,7 @@ public class PPandMMHelper {
 
   private boolean exprentReplaced;
   private VarProcessor varProc;
-  private Map<VarVersionPair, VarVersionPair> remaps = new HashMap<VarVersionPair, VarVersionPair>();
+  private DirectGraph dgraph;
 
   public PPandMMHelper(VarProcessor varProc) {
     this.varProc = varProc;
@@ -48,7 +48,7 @@ public class PPandMMHelper {
   public boolean findPPandMM(RootStatement root) {
 
     FlattenStatementsHelper flatthelper = new FlattenStatementsHelper();
-    DirectGraph dgraph = flatthelper.buildDirectGraph(root);
+    dgraph = flatthelper.buildDirectGraph(root);
 
     LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
     stack.add(dgraph.first);
@@ -70,8 +70,6 @@ public class PPandMMHelper {
 
       stack.addAll(node.succs);
     }
-
-    updateVersions(dgraph);
 
     return res;
   }
@@ -99,7 +97,6 @@ public class PPandMMHelper {
   }
 
   private Exprent processExprentRecursive(Exprent exprent) {
-
     boolean replaced = true;
     while (replaced) {
       replaced = false;
@@ -147,7 +144,7 @@ public class PPandMMHelper {
           if (econst.type == Exprent.EXPRENT_CONST && ((ConstExprent)econst).hasValueOne()) {
             Exprent left = as.getLeft();
 
-            VarType condtype = econd.getExprType();
+            VarType condtype = left.getExprType();
             if (exprsEqual(left, econd) && (midlayer == null || midlayer.equals(condtype))) {
               FunctionExprent ret = new FunctionExprent(
                 func.getFuncType() == FunctionExprent.FUNCTION_ADD ? FunctionExprent.FUNCTION_PPI : FunctionExprent.FUNCTION_MMI,
@@ -156,7 +153,7 @@ public class PPandMMHelper {
 
               exprentReplaced = true;
               if (!left.equals(econd)) {
-                remaps.put(new VarVersionPair((VarExprent)left), new VarVersionPair((VarExprent)econd));
+                updateVersions(dgraph, new VarVersionPair((VarExprent) left), new VarVersionPair((VarExprent) econd));
               }
               return ret;
             }
@@ -183,15 +180,11 @@ public class PPandMMHelper {
 
     VarExprent v1 = (VarExprent)e1;
     VarExprent v2 = (VarExprent)e2;
-    if (remaps.containsKey(new VarVersionPair(v1.getIndex(),v1.getVersion())) || remaps.containsKey(new VarVersionPair(v2.getIndex(),v2.getVersion()))) {
-        return false;
-    }
     return varProc.getRemapped(v1.getIndex()) == varProc.getRemapped(v2.getIndex());
   }
 
 
-  private void updateVersions(DirectGraph graph) {
-    if (remaps.isEmpty()) return;
+  private void updateVersions(DirectGraph graph, final VarVersionPair oldVVP, final VarVersionPair newVVP) {
     graph.iterateExprents(new DirectGraph.ExprentIterator() {
       @Override
       public int processExprent(Exprent exprent) {
@@ -201,10 +194,9 @@ public class PPandMMHelper {
         for (Exprent expr : lst) {
           if (expr.type == Exprent.EXPRENT_VAR) {
             VarExprent var = (VarExprent)expr;
-            VarVersionPair nvar = remaps.get(new VarVersionPair(var));
-            if (nvar != null) {
-              var.setIndex(nvar.var);
-              var.setVersion(nvar.version);
+            if (var.getIndex() == oldVVP.var && var.getVersion() == oldVVP.version) {
+              var.setIndex(newVVP.var);
+              var.setVersion(newVVP.version);
             }
           }
         }
