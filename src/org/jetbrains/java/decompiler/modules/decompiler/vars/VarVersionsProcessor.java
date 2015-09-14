@@ -321,4 +321,7 @@ public class VarVersionsProcessor {
   public Map<Integer, VarVersionPair> getMapOriginalVarIndices() {
     return mapOriginalVarIndices;
   }
+  public VarTypeProcessor getTypeProcessor() {
+    return typeProcessor;
+}
 }

@@ -231,6 +231,9 @@ public class VarExprent extends Exprent {
 
   public void setLVT(LVTVariable lvt) {
     this.lvt = lvt;
+    if (processor != null) {
+        processor.setVarType(new VarVersionPair(this),lvt.getVarType());
+    }
   }
 
   @Override

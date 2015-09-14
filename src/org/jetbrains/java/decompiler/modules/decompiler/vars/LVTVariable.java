@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jetbrains.java.decompiler.struct.gen.VarType;
+
 public class LVTVariable implements Comparable<LVTVariable> {
   public static final Comparator<LVTVariable> INDEX_SORTER = new Comparator<LVTVariable>() {
     @Override
@@ -80,4 +82,8 @@ public class LVTVariable implements Comparable<LVTVariable> {
   public String getSig() {
     return sig;
   }
+
+public VarType getVarType() {
+    return new VarType(desc);
+}
 }

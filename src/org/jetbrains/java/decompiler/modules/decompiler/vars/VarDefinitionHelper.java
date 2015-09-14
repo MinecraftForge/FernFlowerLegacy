@@ -24,11 +24,13 @@ import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchAllStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructMethod;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
+import org.jetbrains.java.decompiler.struct.gen.VarType;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -483,7 +485,7 @@ public class VarDefinitionHelper {
     }
   }
 
-  private static void remapVar(Map<VarVersionPair, VarVersionPair> remap, Statement stat) {
+  private void remapVar(Map<VarVersionPair, VarVersionPair> remap, Statement stat) {
     if (remap == null || stat == null) {
       return;
     }
@@ -505,12 +507,13 @@ public class VarDefinitionHelper {
     }
   }
 
-  private static void remapVar(Map<VarVersionPair, VarVersionPair> remap, Exprent exprent) {
+  private void remapVar(Map<VarVersionPair, VarVersionPair> remap, Exprent exprent) {
     if (exprent == null) {
       return;
     }
     List<Exprent> lst = exprent.getAllExprents(true);
     lst.add(exprent);
+    Map<VarVersionPair, VarType> mapExprentMinTypes = varproc.getVarVersions().getTypeProcessor().getMapExprentMinTypes();
 
     for (Exprent expr : lst) {
       if (expr.type == Exprent.EXPRENT_VAR) {
@@ -518,8 +521,12 @@ public class VarDefinitionHelper {
         VarVersionPair old = new VarVersionPair(var);
         VarVersionPair new_ = remap.get(old);
         if (new_ != null) {
+          VarType firstMinType = mapExprentMinTypes.get(old);
+          VarType secondMinType = mapExprentMinTypes.get(new_);
           var.setIndex(new_.var);
           var.setVersion(new_.version);
+          VarType type = VarType.getCommonSupertype(firstMinType, secondMinType);
+          mapExprentMinTypes.put(new_, type);
         }
       }
     }

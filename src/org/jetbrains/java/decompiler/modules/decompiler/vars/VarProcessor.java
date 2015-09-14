@@ -176,4 +176,8 @@ public class VarProcessor {
     setVarType(to, getVarType(from));
     varVersions.getMapOriginalVarIndices().put(to.var, varVersions.getMapOriginalVarIndices().get(from.var));
   }
+
+  public VarVersionsProcessor getVarVersions() {
+    return varVersions;
+}
 }
