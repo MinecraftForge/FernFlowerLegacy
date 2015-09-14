@@ -183,8 +183,10 @@ public class PPandMMHelper {
 
     VarExprent v1 = (VarExprent)e1;
     VarExprent v2 = (VarExprent)e2;
-    return varProc.getRemapped(v1.getIndex()) == varProc.getRemapped(v2.getIndex())
-            && InterpreterUtil.equalObjects(v1.getVarType(), v2.getVarType());
+    if (remaps.containsKey(new VarVersionPair(v1.getIndex(),v1.getVersion())) || remaps.containsKey(new VarVersionPair(v2.getIndex(),v2.getVersion()))) {
+        return false;
+    }
+    return varProc.getRemapped(v1.getIndex()) == varProc.getRemapped(v2.getIndex());
   }
 
 
