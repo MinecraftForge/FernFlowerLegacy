@@ -37,44 +37,73 @@ import java.util.List;
  */
 
 public class StructInnerClassesAttribute extends StructGeneralAttribute {
-  private List<InnerClassInfo> entries;
+	private List<InnerClassInfo> entries;
+	private List<int[]> classEntries;
+	private List<String[]> stringEntries;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    DataInputStream data = stream();
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		DataInputStream data = stream();
 
-    int len = data.readUnsignedShort();
-    if (len > 0) {
-      entries = new ArrayList<InnerClassInfo>();
+		int len = data.readUnsignedShort();
+		if (len > 0) {
+			entries = new ArrayList<InnerClassInfo>();
+			classEntries = new ArrayList<int[]>(len);
+			stringEntries = new ArrayList<String[]>(len);
 
-      for (int i = 0; i < len; i++) {
-        entries.add(new InnerClassInfo(data, pool));
-      }
-    }
-    else {
-      entries = Collections.emptyList();
-    }
-  }
+			for (int i = 0; i < len; i++) {
+				entries.add(new InnerClassInfo(data, pool));
+				int[] classEntry = new int[4];
+				for (int j = 0; j < 4; j++) {
+					classEntry[j] = data.readUnsignedShort();
+				}
+				classEntries.add(classEntry);
 
-  public List<InnerClassInfo> getEntries() {
-    return entries;
-  }
+				// inner name, enclosing class, original simple name
+				String[] stringEntry = new String[3];
+				stringEntry[0] = pool.getPrimitiveConstant(classEntry[0]).getString();
+				if (classEntry[1] != 0) {
+					stringEntry[1] = pool.getPrimitiveConstant(classEntry[1]).getString();
+				}
+				if (classEntry[2] != 0) {
+					stringEntry[2] = pool.getPrimitiveConstant(classEntry[2]).getString();
+				}
+				stringEntries.add(stringEntry);
+			}
+		} else {
+			entries = Collections.emptyList();
+			classEntries = Collections.emptyList();
+			stringEntries = Collections.emptyList();
+		}
+	}
 
-  public static class InnerClassInfo {
-    public String inner_class;
-    public String outer_class;
-    public String inner_name;
-    public int access;
+	public List<InnerClassInfo> getEntries() {
+		return entries;
+	}
 
-    private InnerClassInfo(DataInputStream data, ConstantPool pool) throws IOException {
-        this.inner_class = readString(pool, data.readUnsignedShort());
-        this.outer_class = readString(pool, data.readUnsignedShort());
-        this.inner_name  = readString(pool, data.readUnsignedShort());
-        this.access = data.readUnsignedShort();
-    }
+	public List<int[]> getClassEntries() {
+		return classEntries;
+	}
 
-    private String readString(ConstantPool pool, int index) {
-        return index == 0 ? null : pool.getPrimitiveConstant(index).getString();
-    }
-  }
+	public List<String[]> getStringEntries() {
+		return stringEntries;
+	}
+
+	public static class InnerClassInfo {
+		public String inner_class;
+		public String outer_class;
+		public String inner_name;
+		public int access;
+
+		private InnerClassInfo(DataInputStream data, ConstantPool pool) throws IOException {
+			this.inner_class = readString(pool, data.readUnsignedShort());
+			this.outer_class = readString(pool, data.readUnsignedShort());
+			this.inner_name = readString(pool, data.readUnsignedShort());
+			this.access = data.readUnsignedShort();
+		}
+
+		private String readString(ConstantPool pool, int index) {
+			return index == 0 ? null : pool.getPrimitiveConstant(index).getString();
+		}
+	}
 }
