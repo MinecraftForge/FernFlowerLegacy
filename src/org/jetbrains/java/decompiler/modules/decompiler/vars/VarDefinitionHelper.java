@@ -550,16 +550,29 @@ public class VarDefinitionHelper {
               // no common supertype, skip the remapping
               continue;
           }
-          if (type.typeFamily == CodeConstants.TYPE_FAMILY_OBJECT && mapExprentMaxTypes.get(old) != null && mapExprentMaxTypes.get(new_) != null) {
-              type = VarType.getCommonMinType(mapExprentMaxTypes.get(old), mapExprentMaxTypes.get(new_));
-          } else if (type.typeFamily == CodeConstants.TYPE_FAMILY_OBJECT) {
-              continue;
+          if (type.typeFamily == CodeConstants.TYPE_FAMILY_OBJECT) {
+              if (mapExprentMaxTypes.get(old) != null && mapExprentMaxTypes.get(new_) != null) {
+                  type = VarType.getCommonMinType(mapExprentMaxTypes.get(old), mapExprentMaxTypes.get(new_));
+              } else if (firstMinType.arrayDim != secondMinType.arrayDim) {
+                  continue;
+              } else {
+                  type = VarType.getCommonMinType(firstMinType, secondMinType);
+                  // couldn't find a sane common supertype, we're not gonna be able to merge
+                  if (type == null || type == VarType.VARTYPE_NULL) {
+                      continue;
+                  }
+              }
           }
           var.setIndex(new_.var);
           var.setVersion(new_.version);
           mapExprentMinTypes.put(new_, type);
           if (constExprents.containsKey(old)) {
               for (ConstExprent ce : constExprents.get(old)) {
+                  ce.setConstType(type);
+              }
+          }
+          if (constExprents.containsKey(new_)) {
+              for (ConstExprent ce : constExprents.get(new_)) {
                   ce.setConstType(type);
               }
           }
