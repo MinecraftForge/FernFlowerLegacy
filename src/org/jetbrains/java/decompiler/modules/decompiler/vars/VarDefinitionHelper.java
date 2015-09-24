@@ -637,6 +637,9 @@ if (mt.getName().equals("func_180655_c")){
           }
 
           ConstExprent right = (ConstExprent)ass.getRight();
+          if (right.getConstType() == VarType.VARTYPE_NULL) {
+              continue;
+          }
           VarType merged = getMergedType(mapExprentMinTypes.get(from), mapExprentMinTypes.get(to),
                                          mapExprentMaxTypes.get(from), mapExprentMaxTypes.get(to));
 
