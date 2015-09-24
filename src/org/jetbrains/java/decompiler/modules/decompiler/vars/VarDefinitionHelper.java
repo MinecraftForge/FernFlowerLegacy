@@ -133,7 +133,7 @@ public class VarDefinitionHelper {
     for (Entry<Integer, Statement> en : mapVarDefStatements.entrySet()) {
       Statement stat = en.getValue();
       Integer index = en.getKey();
-      setupLVTs(stat);
+//      setupLVTs(stat);
 
       if (implDefVars.contains(index)) {
         // already implicitly defined
@@ -452,7 +452,6 @@ if (mt.getName().equals("func_180655_c")){
     }
     return null;
   }
-
   private VPPEntry mergeVars(Statement stat, Map<Integer, VarVersionPair> parent, Map<Integer, VarVersionPair> leaked, Map<VarVersionPair, VarVersionPair> blacklist) {
     Map<Integer, VarVersionPair> this_vars = new HashMap<Integer, VarVersionPair>();
     if (parent.size() > 0)

@@ -17,6 +17,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructMethod;
@@ -125,7 +126,9 @@ public class VarProcessor {
   }
 
   public void setVarType(VarVersionPair pair, VarType type) {
-    varVersions.setVarType(pair, type);
+    if (varVersions != null) {
+        varVersions.setVarType(pair, type);
+    }
   }
 
   public String getVarName(VarVersionPair pair) {
@@ -160,8 +163,11 @@ public class VarProcessor {
     return this.lvt;
   }
 
-  public LVTVariable findLVT(int index, Statement stat) {
-    return this.lvt == null ? null : lvt.find(index, stat);
+  public void findLVT(VarExprent varExprent, int bytecodeOffset) {
+    LVTVariable var = this.lvt == null ? null : lvt.find(varExprent.getIndex(), bytecodeOffset);
+    if (var != null) {
+        varExprent.setLVT(var);
+    }
   }
 
   public int getRemapped(int index) {

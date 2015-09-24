@@ -41,11 +41,7 @@ public class LocalVariableTable {
     mapLVT = null; // Invalidate the cache and rebuild it.
   }
 
-  public LVTVariable find(int index, Statement stat) {
-    BitSet values = new BitSet();
-    MethodProcessorRunnable.getOffset(stat, values);
-    int start = values.nextSetBit(0);
-    int end = values.length()-1;
+  public LVTVariable find(int index, Integer bytecodeOffset) {
     //System.out.println(indent + stat.getClass().getSimpleName() + " (" + start +", " + end + ")");
 
     Map<Integer, List<LVTVariable>> map = getMapVarNames();
@@ -53,7 +49,7 @@ public class LocalVariableTable {
       return null;
     }
     for (LVTVariable lvt : map.get(index)) {
-      if (lvt.start >= start && lvt.end <= end) {
+      if (lvt.start == bytecodeOffset) {
         return lvt;
       }
     }

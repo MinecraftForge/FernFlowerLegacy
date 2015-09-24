@@ -42,13 +42,13 @@ public class LVTTest extends SingleClassesTestBase {
 //  @Test public void testMCWorld() { doTest("net/minecraft/world/World"); }
 //  @Test public void testMCGuiCmdBlock() { doTest("net/minecraft/client/gui/GuiCommandBlock"); }
 
-//  @Test public void testMCWorld() { doTest("net/minecraft/world/World"); }
+  @Test public void testMCWorld() { doTest("net/minecraft/world/World"); }
 
 //  @Test public void testMCGuiCmdBlock() { doTest("net/minecraft/client/gui/GuiCommandBlock"); }
 
 //  @Test public void testMCBlockFence() { doTest("net/minecraft/block/BlockFence"); }
 
 //  @Test public void testMCAbstractTexture() { doTest("net/minecraft/client/multiplayer/ServerAddress"); }
-//  @Test public void testMCAbstractTexture() { doTest("net/minecraft/client/resources/AbstractResourcePack"); }
-  @Test public void testMCGuiShareToLan() { doTest("net/minecraft/client/gui/GuiShareToLan"); }
+//  @Test public void testMCAbstractResourcePack() { doTest("net/minecraft/client/resources/AbstractResourcePack"); }
+//  @Test public void testMCGuiShareToLan() { doTest("net/minecraft/client/gui/GuiShareToLan"); }
 }
