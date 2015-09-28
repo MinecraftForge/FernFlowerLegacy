@@ -1,15 +1,11 @@
 package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jetbrains.java.decompiler.main.rels.MethodProcessorRunnable;
-import org.jetbrains.java.decompiler.modules.decompiler.stats.SequenceStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 
 public class LocalVariableTable {
@@ -74,8 +70,8 @@ public class LocalVariableTable {
       versions.put(lvt.index, idx);
       List<LVTVariable> lvtList = mapLVT.get(lvt.index);
       if (lvtList == null) {
-          lvtList = new ArrayList<LVTVariable>();
-          mapLVT.put(lvt.index, lvtList);
+        lvtList = new ArrayList<LVTVariable>();
+        mapLVT.put(lvt.index, lvtList);
       }
       lvtList.add(lvt);
     }
@@ -86,24 +82,16 @@ public class LocalVariableTable {
   }
 
   public Map<Integer, LVTVariable> getVars(Statement statement) {
-      HashMap<Integer,LVTVariable> ret = new HashMap<Integer,LVTVariable>();
-      if (statement == null) return ret;
-      StartEndPair sepair = statement.getStartEndRange();
-    if (endpoints.containsKey(sepair)) {
-        for (LVTVariable lvt : endpoints.get(sepair)) {
-            ret.put(lvt.index,lvt);
-        }
+    Map<Integer, LVTVariable> ret = new HashMap<Integer, LVTVariable>();
+    if (statement == null) {
+      return ret;
     }
-//    for (Entry<Integer, List<LVTVariable>> entry : endpoints.get(end)) {
-//      for (LVTVariable lvt : entry.getValue()) {
-//        if (lvt.start >= start && lvt.end <= end) {
-//          if (ret.containsKey(entry.getKey())) {
-//            System.out.println("DUPLICATE INDEX WHAT THE FUCK: " + entry.getKey());
-//          }
-//          ret.put(entry.getKey(), lvt);
-//        }
-//      }
-//    }
+    StartEndPair sepair = statement.getStartEndRange();
+    if (endpoints.containsKey(sepair)) {
+      for (LVTVariable lvt : endpoints.get(sepair)) {
+        ret.put(lvt.index, lvt);
+      }
+    }
     return ret;
   }
 }

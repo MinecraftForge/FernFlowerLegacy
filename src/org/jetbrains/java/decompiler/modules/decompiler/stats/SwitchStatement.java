@@ -368,13 +368,13 @@ public class SwitchStatement extends Statement {
   }
 
   @Override
-    public StartEndPair getStartEndRange() {
-      StartEndPair[] sepairs = new StartEndPair[caseStatements.size() + 1];
-      int i = 0;
-      sepairs[i++] = super.getStartEndRange();
-      for (Statement st : caseStatements) {
-          sepairs[i++] = st.getStartEndRange();
-      }
-      return StartEndPair.join(sepairs);
+  public StartEndPair getStartEndRange() {
+    StartEndPair[] sepairs = new StartEndPair[caseStatements.size() + 1];
+    int i = 0;
+    sepairs[i++] = super.getStartEndRange();
+    for (Statement st : caseStatements) {
+      sepairs[i++] = st.getStartEndRange();
     }
+    return StartEndPair.join(sepairs);
+  }
 }

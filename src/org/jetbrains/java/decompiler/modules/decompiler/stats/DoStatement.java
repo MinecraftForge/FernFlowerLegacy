@@ -242,9 +242,4 @@ public class DoStatement extends Statement {
   public void setLooptype(int looptype) {
     this.looptype = looptype;
   }
-
-  @Override
-    public StartEndPair getStartEndRange() {
-        return super.getStartEndRange();
-    }
 }

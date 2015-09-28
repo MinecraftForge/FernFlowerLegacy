@@ -465,7 +465,9 @@ public class IfStatement extends Statement {
   }
 
   @Override
-    public StartEndPair getStartEndRange() {
-        return StartEndPair.join(super.getStartEndRange(),ifstat != null ? ifstat.getStartEndRange() : null,elsestat != null ? elsestat.getStartEndRange(): null);
-    }
+  public StartEndPair getStartEndRange() {
+    return StartEndPair.join(super.getStartEndRange(),
+      ifstat != null ? ifstat.getStartEndRange() : null,
+      elsestat != null ? elsestat.getStartEndRange(): null);
+  }
 }

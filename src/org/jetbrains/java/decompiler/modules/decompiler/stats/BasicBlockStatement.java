@@ -97,11 +97,11 @@ public class BasicBlockStatement extends Statement {
   }
 
   @Override
-    public StartEndPair getStartEndRange() {
-      if (block.size() > 0) {
-          return new StartEndPair(block.getStartInstruction(),block.getEndInstruction());
+  public StartEndPair getStartEndRange() {
+    if (block.size() > 0) {
+      return new StartEndPair(block.getStartInstruction(), block.getEndInstruction());
     } else {
-        return null;
+      return null;
     }
   }
 }

@@ -49,7 +49,7 @@ public class RootStatement extends Statement {
   }
 
   @Override
-    public StartEndPair getStartEndRange() {
-        return first.getStartEndRange();
-    }
+  public StartEndPair getStartEndRange() {
+    return first.getStartEndRange();
+  }
 }

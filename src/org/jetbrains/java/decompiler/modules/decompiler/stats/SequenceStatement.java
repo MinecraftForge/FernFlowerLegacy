@@ -138,9 +138,4 @@ public class SequenceStatement extends Statement {
   public Statement getSimpleCopy() {
     return new SequenceStatement();
   }
-
-  @Override
-    public StartEndPair getStartEndRange() {
-        return super.getStartEndRange();
-    }
 }

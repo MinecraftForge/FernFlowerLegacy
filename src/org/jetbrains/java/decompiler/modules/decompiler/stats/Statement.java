@@ -941,15 +941,15 @@ public class Statement implements IMatchable {
 
   private StartEndPair endpoints;
   public StartEndPair getStartEndRange() {
-      if (endpoints == null) {
-          int start = Integer.MAX_VALUE;
-          int end = Integer.MIN_VALUE;
-          for (Statement st : getStats()) {
-              start = Math.min(start, st.getBasichead().getBlock().getStartInstruction());
-              end = Math.max(end, st.getBasichead().getBlock().getEndInstruction());
-          }
-          endpoints = new StartEndPair(start,end);
+    if (endpoints == null) {
+      int start = Integer.MAX_VALUE;
+      int end   = Integer.MIN_VALUE;
+      for (Statement st : getStats()) {
+        start = Math.min(start, st.getBasichead().getBlock().getStartInstruction());
+        end   = Math.max(end,   st.getBasichead().getBlock().getEndInstruction());
       }
-      return endpoints;
+      endpoints = new StartEndPair(start, end);
+    }
+    return endpoints;
   }
 }
