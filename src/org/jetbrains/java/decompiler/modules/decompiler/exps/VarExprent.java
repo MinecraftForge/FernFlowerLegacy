@@ -22,6 +22,7 @@ import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.TextBuffer;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.CheckTypesResult;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.LVTVariable;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarTypeProcessor;
@@ -110,6 +111,9 @@ public class VarExprent extends Exprent {
         }
         if (lvt != null && lvt.getSig() != null) {
           buffer.append(GenericMain.getGenericCastTypeName(new GenericType(lvt.getSig()))).append(" ");
+        }
+        else if (lvt != null) {
+          buffer.append(ExprProcessor.getCastTypeName(lvt.getVarType())).append(" ");
         }
         else {
           buffer.append(ExprProcessor.getCastTypeName(getVarType())).append(" ");
@@ -231,7 +235,7 @@ public class VarExprent extends Exprent {
 
   public void setLVT(LVTVariable lvt) {
     this.lvt = lvt;
-    if (processor != null) {
+    if (processor != null && lvt != null) {
       processor.setVarType(new VarVersionPair(this), lvt.getVarType());
     }
   }
@@ -243,6 +247,15 @@ public class VarExprent extends Exprent {
   @Override
   public String toString() {
     return lvt != null ? lvt.name :  "var_" + index + "_" + version;
+  }
+
+  @Override
+  public CheckTypesResult checkExprTypeBounds() {
+    CheckTypesResult checkExprTypeBounds = super.checkExprTypeBounds();
+    if (lvt != null) {
+      checkExprTypeBounds.addMinTypeExprent(this, lvt.getVarType());
+    }
+    return checkExprTypeBounds;
   }
 
 }
