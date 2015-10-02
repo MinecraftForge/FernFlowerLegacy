@@ -531,7 +531,7 @@ public class VarDefinitionHelper {
           var.setLVT(lvt);
         } else {
           System.currentTimeMillis();
-          System.out.println("null " + new VarVersionPair(var));
+          //System.out.println("null " + new VarVersionPair(var));
         }
       }
     }
@@ -630,6 +630,9 @@ public class VarDefinitionHelper {
               if (obj == ifst.getIfstat() || obj == ifst.getElsestat()) {
                 leaked_n.clear(); // Force no leaking at the end of if blocks
                 // We may need to do this for Switches as well.. But havent run into that issue yet...
+              }
+              else if (obj == ifst.getFirst()) {
+                leaked.putAll(leaked_n); //First is outside the scope so leak!
               }
             }
             this_vars.putAll(leaked_n);
