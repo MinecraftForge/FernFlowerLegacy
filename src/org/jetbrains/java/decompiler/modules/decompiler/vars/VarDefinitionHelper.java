@@ -260,22 +260,18 @@ public class VarDefinitionHelper {
   }
 
   private LVTVariable findLVT(int index, Exprent exp) {
-    VarExprent var = null;
-
-    if (exp.type == Exprent.EXPRENT_ASSIGNMENT) {
-      AssignmentExprent ass = (AssignmentExprent)exp;
-      if (ass.getLeft().type == Exprent.EXPRENT_VAR) {
-        var = (VarExprent)ass.getLeft();
+    for (Exprent e : exp.getAllExprents(false)) {
+      LVTVariable lvt = findLVT(index, e);
+      if (lvt != null) {
+        return lvt;
       }
     }
-    else if (exp.type == Exprent.EXPRENT_VAR) {
-      var = (VarExprent)exp;
-    }
 
-    if (var == null) {
+    if (exp.type != Exprent.EXPRENT_VAR) {
       return null;
     }
 
+    VarExprent var = (VarExprent)exp;
     return var.getIndex() == index ? var.getLVT() : null;
   }
 

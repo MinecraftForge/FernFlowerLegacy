@@ -82,6 +82,7 @@ public class VarExprent extends Exprent {
     var.setVersion(version);
     var.setClassDef(classDef);
     var.setStack(stack);
+    var.setLVT(lvt);
     return var;
   }
 

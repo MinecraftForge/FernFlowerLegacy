@@ -166,7 +166,7 @@ public class VarProcessor {
   public void findLVT(VarExprent varExprent, int bytecodeOffset) {
     LVTVariable var = this.lvt == null ? null : lvt.find(varExprent.getIndex(), bytecodeOffset);
     if (var != null) {
-        varExprent.setLVT(var);
+      varExprent.setLVT(var);
     }
   }
 
