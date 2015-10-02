@@ -74,7 +74,9 @@ public class EnumProcessor {
 
   // FIXME: move to a util class (see also InitializerProcessor)
   private static Statement findFirstData(Statement stat) {
-
+    if (stat == null) {
+      return null;
+    }
     if (stat.getExprents() != null) {
       return stat;
     }
