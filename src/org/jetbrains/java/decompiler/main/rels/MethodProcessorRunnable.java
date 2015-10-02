@@ -205,6 +205,8 @@ public class MethodProcessorRunnable implements Runnable {
 
     SecondaryFunctionsHelper.identifySecondaryFunctions(root);
 
+    SynchronizedHelper.cleanSynchronizedVar(root);
+
     varProc.setVarDefinitions(root);
 
     // must be the last invocation, because it makes the statement structure inconsistent

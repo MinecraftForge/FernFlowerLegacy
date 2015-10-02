@@ -26,6 +26,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.exps.IfExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.*;
+import org.jetbrains.java.decompiler.util.ExprentUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -462,7 +463,7 @@ public class MergeHelper {
         InvocationExprent hnext = (InvocationExprent)getUncast(drillNots(stat.getConditionExprent()));
         if (next.getInstance().type != Exprent.EXPRENT_VAR ||
             hnext.getInstance().type != Exprent.EXPRENT_VAR ||
-            isVarReferenced((VarExprent)initDoExprent.getLeft(), stat, (VarExprent)next.getInstance(), (VarExprent)hnext.getInstance())) {
+            ExprentUtil.isVarReferenced((VarExprent)initDoExprent.getLeft(), stat, (VarExprent)next.getInstance(), (VarExprent)hnext.getInstance())) {
           return false;
         }
 
@@ -511,7 +512,7 @@ public class MergeHelper {
 
           InvocationExprent next = (InvocationExprent)getUncast(firstDoExprent.getRight());
           if (next.getInstance().type != Exprent.EXPRENT_VAR ||
-              isVarReferenced((VarExprent)itr.getLeft(), stat, (VarExprent)next.getInstance(), (VarExprent)hnext.getInstance())) {
+              ExprentUtil.isVarReferenced((VarExprent)itr.getLeft(), stat, (VarExprent)next.getInstance(), (VarExprent)hnext.getInstance())) {
             return false;
           }
 
@@ -533,7 +534,7 @@ public class MergeHelper {
         else {
           InvocationExprent next = (InvocationExprent)getUncast(ass.getRight());
           if (next.getInstance().type != Exprent.EXPRENT_VAR ||
-              isVarReferenced((VarExprent)itr.getLeft(), stat, (VarExprent)next.getInstance(), (VarExprent)hnext.getInstance())) {
+              ExprentUtil.isVarReferenced((VarExprent)itr.getLeft(), stat, (VarExprent)next.getInstance(), (VarExprent)hnext.getInstance())) {
             return false;
           }
 
@@ -603,53 +604,6 @@ public class MergeHelper {
     //cleanEmptyStatements(stat, firstData); //TODO: Look into this and see what it does...
 
     return true;
-  }
-
-  private static boolean isVarReferenced(VarExprent var, Statement stat, VarExprent... whitelist) {
-    if (stat.getExprents() == null) {
-      for (Object obj : stat.getSequentialObjects()) {
-        if (obj instanceof Statement) {
-          if (isVarReferenced(var, (Statement)obj, whitelist)) {
-            return true;
-          }
-        }
-        else if (obj instanceof Exprent) {
-          if (isVarReferenced(var, (Exprent)obj, whitelist)) {
-            return true;
-          }
-        }
-      }
-    }
-    else {
-      for (Exprent exp : stat.getExprents()) {
-        if (isVarReferenced(var, exp, whitelist)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private static boolean isVarReferenced(VarExprent target, Exprent exp, VarExprent... whitelist) {
-    List<Exprent> lst = exp.getAllExprents(true);
-    lst.add(exp);
-    for (Exprent ex : lst) {
-      if (ex != target && ex.type == Exprent.EXPRENT_VAR) {
-        VarExprent var = (VarExprent)ex;
-        if (var.getIndex() == target.getIndex() && var.getVersion() == target.getVersion()) {
-          boolean allowed = false;
-          for (VarExprent white : whitelist) {
-            if (var == white) {
-              allowed = true;
-            }
-          }
-          if (!allowed) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
   }
 
   private static boolean isType(Exprent exp, int type) { //This is just a helper macro, Wish java had real macros.

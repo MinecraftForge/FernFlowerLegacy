@@ -635,6 +635,12 @@ public class VarDefinitionHelper {
                 leaked.putAll(leaked_n); //First is outside the scope so leak!
               }
             }
+            else if (stat.type == Statement.TYPE_SWITCH ||
+                     stat.type == Statement.TYPE_SYNCRONIZED) {
+              if (obj == stat.getFirst()) {
+                leaked.putAll(leaked_n); //First is outside the scope so leak!
+              }
+            }
             this_vars.putAll(leaked_n);
           }
         }
