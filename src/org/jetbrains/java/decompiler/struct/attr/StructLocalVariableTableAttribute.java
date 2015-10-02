@@ -61,8 +61,13 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
   }
 
   public void addLocalVariableTable(StructLocalVariableTableAttribute attr) {
-    lvt.mergeLVTs(attr.lvt);
-    attr.lvt = lvt;
+    if (lvt == null) {
+      lvt = attr.lvt;
+    }
+    else {
+      lvt.mergeLVTs(attr.lvt);
+      attr.lvt = lvt;
+    }
   }
 
   public Map<Integer, List<LVTVariable>> getMapVarNames() {
