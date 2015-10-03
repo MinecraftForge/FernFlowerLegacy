@@ -162,15 +162,17 @@ public class MethodProcessorRunnable implements Runnable {
       LabelHelper.cleanUpEdges(root);
 
       while (true) {
+          if (EliminateLoopsHelper.eliminateLoops(root, cl)) {
+              continue;
+          }
         MergeHelper.enhanceLoops(root);
-
+        if (!IfHelper.mergeAllIfs(root)) {
+            break;
+          }
         if (LoopExtractHelper.extractLoops(root)) {
           continue;
         }
 
-        if (!IfHelper.mergeAllIfs(root)) {
-          break;
-        }
       }
 
       if (DecompilerContext.getOption(IFernflowerPreferences.IDEA_NOT_NULL_ANNOTATION)) {

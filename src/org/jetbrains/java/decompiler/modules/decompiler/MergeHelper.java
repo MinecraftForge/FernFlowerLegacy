@@ -74,7 +74,7 @@ public class MergeHelper {
         }
         else {
           // identify a do{}while loop
-          matchDoWhile(stat);
+//          matchDoWhile(stat);
         }
 
         break;
