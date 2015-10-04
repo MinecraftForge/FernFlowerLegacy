@@ -92,8 +92,14 @@ public class LoopExtractHelper {
       }
     }
 
-    if (!extractLastIf(stat, stats)) {
-      return extractFirstIf(stat, stats);
+    if (stats.size() > 0) { // In this case prioritize first to help the Loop enhancer.
+      if (stat.getParent().getStats().getLast() != stat){
+        return false;
+      }
+    }
+
+    if (!extractFirstIf(stat, stats)) {
+      return extractLastIf(stat, stats);
     }
     else {
       return true;
@@ -218,6 +224,11 @@ public class LoopExtractHelper {
         edge.getSource().changeEdgeNode(Statement.DIRECTION_FORWARD, edge, loop);
         loop.addPredecessor(edge);
       }
+    }
+
+    List<StatEdge> link = target.getPredecessorEdges(StatEdge.TYPE_BREAK);
+    if (link.size() == 1) {
+      link.get(0).canInline = false;
     }
   }
 }
