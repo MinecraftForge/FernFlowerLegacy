@@ -164,6 +164,7 @@ public class DoStatement extends Statement {
         break;
       case LOOP_FOREACH:
         lst.add(getInitExprent());
+        lst.add(getIncExprent());
     }
 
     lst.add(first);
