@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 public class VarProcessor {
 
   private Map<VarVersionPair, String> mapVarNames = new HashMap<VarVersionPair, String>();
+  private Map<VarVersionPair, LVTVariable> mapVarLVTs = new HashMap<VarVersionPair, LVTVariable>();
   private VarVersionsProcessor varVersions;
   private final Map<VarVersionPair, String> thisVars = new HashMap<VarVersionPair, String>();
   private final Set<VarVersionPair> externalVars = new HashSet<VarVersionPair>();
@@ -127,7 +128,7 @@ public class VarProcessor {
 
   public void setVarType(VarVersionPair pair, VarType type) {
     if (varVersions != null) {
-        varVersions.setVarType(pair, type);
+      varVersions.setVarType(pair, type);
     }
   }
 
@@ -185,5 +186,13 @@ public class VarProcessor {
 
   public VarVersionsProcessor getVarVersions() {
     return varVersions;
-}
+  }
+
+  public void setVarLVT(VarVersionPair var, LVTVariable lvt) {
+    mapVarLVTs.put(var, lvt);
+  }
+
+  public LVTVariable getVarLVT(VarVersionPair var) {
+    return mapVarLVTs.get(var);
+  }
 }

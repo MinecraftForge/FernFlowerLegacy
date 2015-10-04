@@ -28,6 +28,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.sforms.DirectNode;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.LVTVariable;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarTypeProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.StructClass;
@@ -454,6 +455,8 @@ public class NestedClassProcessor {
         HashMap<VarVersionPair, String> mapNewNames = new HashMap<VarVersionPair, String>();
         // local var types
         HashMap<VarVersionPair, VarType> mapNewTypes = new HashMap<VarVersionPair, VarType>();
+        // local var table entries
+        HashMap<VarVersionPair, LVTVariable> mapNewLVTs = new HashMap<VarVersionPair, LVTVariable>();
 
         final HashMap<Integer, VarVersionPair> mapParamsToNewVars = new HashMap<Integer, VarVersionPair>();
         if (meth.signatureFields != null) {
@@ -469,15 +472,17 @@ public class NestedClassProcessor {
 
               String varname = null;
               VarType vartype = null;
+              LVTVariable varlvt = null;
 
               if (child.type != ClassNode.CLASS_MEMBER) {
                 varname = encmeth.varproc.getVarName(paar);
                 vartype = encmeth.varproc.getVarType(paar);
+                varlvt = encmeth.varproc.getVarLVT(paar);
 
                 encmeth.varproc.setVarFinal(paar, VarTypeProcessor.VAR_EXPLICIT_FINAL);
               }
 
-              if (paar.var == -1 || "this".equals(varname)) {
+              if (paar.var == -1 || "this".equals(varname) || (varlvt != null && "this".equals(varlvt.name))) {
                 if (parent.simpleName == null) {
                   // anonymous enclosing class, no access to this
                   varname = VarExprent.VAR_NAMELESS_ENCLOSURE;
@@ -485,11 +490,15 @@ public class NestedClassProcessor {
                 else {
                   varname = parent.simpleName + ".this";
                 }
+                if (varlvt != null) {
+                  varlvt = varlvt.rename(varname);
+                }
                 meth.varproc.getThisVars().put(newvar, parent.classStruct.qualifiedName);
               }
 
               mapNewNames.put(newvar, varname);
               mapNewTypes.put(newvar, vartype);
+              mapNewLVTs.put(newvar, varlvt);
             }
             varindex += md.params[index++].stackSize;
           }
@@ -507,6 +516,7 @@ public class NestedClassProcessor {
 
             String varname = null;
             VarType vartype = null;
+            LVTVariable varlvt = null;
 
             if (clnode.type != ClassNode.CLASS_MEMBER) {
 
@@ -514,11 +524,12 @@ public class NestedClassProcessor {
 
               varname = enclosing_method.varproc.getVarName(entr.getValue());
               vartype = enclosing_method.varproc.getVarType(entr.getValue());
+              varlvt  = enclosing_method.varproc.getVarLVT(entr.getValue());
 
               enclosing_method.varproc.setVarFinal(entr.getValue(), VarTypeProcessor.VAR_EXPLICIT_FINAL);
             }
 
-            if (entr.getValue().var == -1 || "this".equals(varname)) {
+            if (entr.getValue().var == -1 || "this".equals(varname) || (varlvt != null && "this".equals(varlvt.name))) {
               if (clnode.parent.simpleName == null) {
                 // anonymous enclosing class, no access to this
                 varname = VarExprent.VAR_NAMELESS_ENCLOSURE;
@@ -526,11 +537,15 @@ public class NestedClassProcessor {
               else {
                 varname = clnode.parent.simpleName + ".this";
               }
+              if (varlvt != null) {
+                varlvt = varlvt.rename(varname);
+              }
               meth.varproc.getThisVars().put(newvar, clnode.parent.classStruct.qualifiedName);
             }
 
             mapNewNames.put(newvar, varname);
             mapNewTypes.put(newvar, vartype);
+            mapNewLVTs.put(newvar, varlvt);
 
             // hide synthetic field
             if (clnode == child) { // fields higher up the chain were already handled with their classes
@@ -549,10 +564,14 @@ public class NestedClassProcessor {
         for (Entry<VarVersionPair, String> entr : mapNewNames.entrySet()) {
           VarVersionPair varpaar = entr.getKey();
           VarType vartype = mapNewTypes.get(varpaar);
+          LVTVariable varlvt = mapNewLVTs.get(varpaar);
 
           meth.varproc.setVarName(varpaar, entr.getValue());
           if (vartype != null) {
             meth.varproc.setVarType(varpaar, vartype);
+          }
+          if (varlvt != null) {
+            meth.varproc.setVarLVT(varpaar, varlvt);
           }
         }
 
@@ -602,7 +621,12 @@ public class NestedClassProcessor {
               if (mapParamsToNewVars.containsKey(varindex)) {
                 VarVersionPair newvar = mapParamsToNewVars.get(varindex);
                 meth.varproc.getExternalVars().add(newvar);
-                return new VarExprent(newvar.var, meth.varproc.getVarType(newvar), meth.varproc);
+                VarExprent ret = new VarExprent(newvar.var, meth.varproc.getVarType(newvar), meth.varproc);
+                LVTVariable lvt = meth.varproc.getVarLVT(newvar);
+                if (lvt != null) {
+                  ret.setLVT(lvt);
+                }
+                return ret;
               }
             }
             else if (exprent.type == Exprent.EXPRENT_FIELD) {
@@ -616,7 +640,12 @@ public class NestedClassProcessor {
                 //		mapFieldsToNewVars.containsKey(keyField)) {
                 VarVersionPair newvar = mapFieldsToNewVars.get(keyField);
                 meth.varproc.getExternalVars().add(newvar);
-                return new VarExprent(newvar.var, meth.varproc.getVarType(newvar), meth.varproc);
+                VarExprent ret = new VarExprent(newvar.var, meth.varproc.getVarType(newvar), meth.varproc);
+                LVTVariable lvt = meth.varproc.getVarLVT(newvar);
+                if (lvt != null) {
+                  ret.setLVT(lvt);
+                }
+                return ret;
               }
             }
 

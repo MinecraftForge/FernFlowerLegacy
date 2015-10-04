@@ -323,5 +323,5 @@ public class VarVersionsProcessor {
   }
   public VarTypeProcessor getTypeProcessor() {
     return typeProcessor;
-}
+  }
 }

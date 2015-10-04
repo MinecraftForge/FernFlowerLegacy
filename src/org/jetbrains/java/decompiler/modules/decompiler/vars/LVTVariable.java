@@ -83,7 +83,11 @@ public class LVTVariable implements Comparable<LVTVariable> {
     return sig;
   }
 
-public VarType getVarType() {
+  public VarType getVarType() {
     return new VarType(desc);
-}
+  }
+
+  public LVTVariable rename(String newName) {
+    return new LVTVariable(newName, desc, start, end, index, isLVTT);
+  }
 }

@@ -440,6 +440,10 @@ public class VarDefinitionHelper {
 
     findTypes(stat, types);
 
+    for (Entry<VarVersionPair, LVTVariable> e : types.entrySet()) {
+      varproc.setVarLVT(e.getKey(), e.getValue());
+    }
+
     applyTypes(stat, types);
   }
 
@@ -470,29 +474,34 @@ public class VarDefinitionHelper {
   }
 
   private void findTypes(Exprent exp, Map<VarVersionPair, LVTVariable> types) {
-    VarExprent var = null;
+    List<Exprent> lst = exp.getAllExprents(true);
+    lst.add(exp);
 
-    if (exp.type == Exprent.EXPRENT_ASSIGNMENT) {
-      AssignmentExprent ass = (AssignmentExprent)exp;
-      if (ass.getLeft().type == Exprent.EXPRENT_VAR) {
-        var = (VarExprent)ass.getLeft();
+    for (Exprent exprent : lst) {
+      if (exprent.type == Exprent.EXPRENT_VAR) {
+        VarExprent var = (VarExprent)exprent;
+        if (var.getLVT() == null) {
+          continue;
+        }
+        VarVersionPair ver = new VarVersionPair(var);
+        if (var.isDefinition()) {
+          types.put(ver, var.getLVT());
+        }
+        else if (!types.containsKey(ver)) {
+          types.put(ver, var.getLVT());
+        }
       }
     }
-    else if (exp.type == Exprent.EXPRENT_VAR) {
-      var = (VarExprent)exp;
-    }
-
-    if (var == null || !var.isDefinition()) {
-      return;
-    }
-
-    types.put(new VarVersionPair(var), var.getLVT());
   }
 
 
   private void applyTypes(Statement stat, Map<VarVersionPair, LVTVariable> types) {
     if (stat == null || types.size() == 0) {
       return;
+    }
+
+    for (Exprent exp : stat.getVarDefinitions()) {
+        applyTypes(exp, types);
     }
 
     if (stat.getExprents() == null) {
@@ -637,6 +646,10 @@ public class VarDefinitionHelper {
                 leaked.putAll(leaked_n); //First is outside the scope so leak!
               }
             }
+            else if (stat.type == Statement.TYPE_TRYCATCH ||
+                     stat.type == Statement.TYPE_CATCHALL) {
+              leaked_n.clear(); // Catches can't leak anything mwhahahahah!
+            }
             this_vars.putAll(leaked_n);
           }
         }
@@ -731,6 +744,18 @@ public class VarDefinitionHelper {
         }
       }
       success |= remapped;
+    }
+    if (success) {
+      Iterator<Exprent> itr = stat.getVarDefinitions().iterator();
+      while (itr.hasNext()) {
+        Exprent exp = itr.next();
+        if (exp.type == Exprent.EXPRENT_VAR) {
+          VarExprent var = (VarExprent)exp;
+          if (from.var == var.getIndex() && from.version == var.getVersion()) {
+            itr.remove();
+          }
+        }
+      }
     }
     return success;
   }
