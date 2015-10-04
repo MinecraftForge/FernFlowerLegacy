@@ -19,6 +19,7 @@ import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.code.InstructionSequence;
 import org.jetbrains.java.decompiler.code.cfg.ControlFlowGraph;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
@@ -27,6 +28,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.*;
 import org.jetbrains.java.decompiler.modules.decompiler.deobfuscator.ExceptionDeobfuscator;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.IfExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DummyExitStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
@@ -125,11 +127,11 @@ public class MethodProcessorRunnable implements Runnable {
       DecompilerContext.getLogger().writeMessage("Heavily obfuscated exception ranges found!", IFernflowerLogger.Severity.WARN);
     }
 
-    RootStatement root = DomHelper.parseGraph(graph);
+    RootStatement root = DomHelper.parseGraph(graph, mt);
 
     FinallyProcessor fProc = new FinallyProcessor(varProc);
     while (fProc.iterateGraph(mt, root, graph)) {
-      root = DomHelper.parseGraph(graph);
+      root = DomHelper.parseGraph(graph, mt);
     }
 
     // remove synchronized exception handler
@@ -162,17 +164,19 @@ public class MethodProcessorRunnable implements Runnable {
       LabelHelper.cleanUpEdges(root);
 
       while (true) {
-          if (EliminateLoopsHelper.eliminateLoops(root, cl)) {
-              continue;
-          }
-        MergeHelper.enhanceLoops(root);
-        if (!IfHelper.mergeAllIfs(root)) {
-            break;
-          }
+        if (EliminateLoopsHelper.eliminateLoops(root, cl)) {
+          continue;
+        }
+
         if (LoopExtractHelper.extractLoops(root)) {
           continue;
         }
 
+        MergeHelper.enhanceLoops(root);
+
+        if (!IfHelper.mergeAllIfs(root)) {
+          break;
+        }
       }
 
       if (DecompilerContext.getOption(IFernflowerPreferences.IDEA_NOT_NULL_ANNOTATION)) {
@@ -230,7 +234,7 @@ public class MethodProcessorRunnable implements Runnable {
     return finished;
   }
 
-  public static void printMethod(RootStatement root, String name, VarProcessor varProc) {
+  public static void printMethod(Statement root, String name, VarProcessor varProc) {
     System.out.println(name + " {");
     if (root == null || root.getSequentialObjects() == null) {
         System.out.println("}");
@@ -243,7 +247,9 @@ public class MethodProcessorRunnable implements Runnable {
         System.out.println("  " + obj.getClass().getSimpleName());
       }
     }
-    printStatement(root.getDummyExit(), "  ",varProc);
+    if (root instanceof RootStatement) {
+      printStatement(((RootStatement)root).getDummyExit(), "  ",varProc);
+    }
     System.out.println("}");
   }
 
@@ -256,6 +262,9 @@ public class MethodProcessorRunnable implements Runnable {
       }
     } else {
       for (Object obj : st.getSequentialObjects()) {
+        if (obj == null) {
+          continue;
+        }
         if (obj instanceof Statement) {
           getOffset((Statement)obj, values);
         } else if (obj instanceof Exprent) {
@@ -273,7 +282,9 @@ public class MethodProcessorRunnable implements Runnable {
     int start = values.nextSetBit(0);
     int end = values.length()-1;
 
-    System.out.println(indent + statement.type + ": (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
+    System.out.println(indent + "{" + statement.type + "}:" + statement.id + " (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
+    for (StatEdge edge : statement.getAllSuccessorEdges())
+      System.out.println(indent + " Dest: " + edge.getDestination());
 
     if (statement.getExprents() != null) {
       for(Exprent exp : statement.getExprents()) {
@@ -282,6 +293,9 @@ public class MethodProcessorRunnable implements Runnable {
     }
     indent += "  ";
     for (Object obj : statement.getSequentialObjects()) {
+      if (obj == null) {
+        continue;
+      }
       if (obj instanceof Statement) {
         printStatement((Statement)obj, indent,varProc);
       } else if (obj instanceof Exprent) {
@@ -302,13 +316,15 @@ public class MethodProcessorRunnable implements Runnable {
       if (exp instanceof VarExprent) {
           VarExprent varExprent = (VarExprent)exp;
         int currindex = varExprent.getIndex();
-        int origindex = varProc.getRemapped(currindex);
+        int origindex = varProc == null ? -2 : varProc.getRemapped(currindex);
         sb.append("[").append(currindex).append(":").append(origindex).append(", ").append(varExprent.isStack()).append("]");
-        if (varProc.getLVT() != null)
+        if (varProc != null && varProc.getLVT() != null)
           sb.append(varProc.getLVT().getCandidates(origindex));
       } else if (exp instanceof AssignmentExprent) {
-          AssignmentExprent assignmentExprent = (AssignmentExprent)exp;
+        AssignmentExprent assignmentExprent = (AssignmentExprent)exp;
         sb.append("{").append(printExprent(" ",assignmentExprent.getLeft(),varProc)).append(" =").append(printExprent(" ",assignmentExprent.getRight(),varProc)).append("}");
+      } else if (exp instanceof IfExprent) {
+        sb.append(" ").append(exp.toJava(0, new BytecodeMappingTracer()));
       }
       return sb.toString();
   }

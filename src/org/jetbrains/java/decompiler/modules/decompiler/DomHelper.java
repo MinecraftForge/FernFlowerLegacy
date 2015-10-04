@@ -20,9 +20,12 @@ import org.jetbrains.java.decompiler.code.cfg.ControlFlowGraph;
 import org.jetbrains.java.decompiler.code.cfg.ExceptionRangeCFG;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
+import org.jetbrains.java.decompiler.main.rels.MethodProcessorRunnable;
 import org.jetbrains.java.decompiler.modules.decompiler.decompose.FastExtendedPostdominanceHelper;
 import org.jetbrains.java.decompiler.modules.decompiler.deobfuscator.IrreducibleCFGDeobfuscator;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.*;
+import org.jetbrains.java.decompiler.struct.StructMethod;
+import org.jetbrains.java.decompiler.util.DotExporter;
 import org.jetbrains.java.decompiler.util.FastFixedSetFactory;
 import org.jetbrains.java.decompiler.util.FastFixedSetFactory.FastFixedSet;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
@@ -207,17 +210,11 @@ public class DomHelper {
     return ret;
   }
 
-  public static RootStatement parseGraph(ControlFlowGraph graph) {
+  public static RootStatement parseGraph(ControlFlowGraph graph, StructMethod mt) {
 
     RootStatement root = graphToStatement(graph);
-
     if (!processStatement(root, new HashMap<Integer, Set<Integer>>())) {
-
-      //			try {
-      //				DotExporter.toDotFile(root.getFirst().getStats().get(13), new File("c:\\Temp\\stat1.dot"));
-      //			} catch (Exception ex) {
-      //				ex.printStackTrace();
-      //			}
+      DotExporter.toDotFile(graph, mt, "parseGraphFail", true);
       throw new RuntimeException("parsing failure!");
     }
 
