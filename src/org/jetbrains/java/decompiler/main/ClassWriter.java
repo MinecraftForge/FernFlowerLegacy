@@ -725,6 +725,12 @@ public class ClassWriter {
         int index = isEnum && init ? 3 : thisVar ? 1 : 0;
         boolean hasDescriptor = descriptor != null;
         int start = isEnum && init && !hasDescriptor ? 2 : 0;
+
+        if (init && hasDescriptor && !isEnum &&
+            ((node.access & CodeConstants.ACC_STATIC) == 0) && node.type == ClassNode.CLASS_MEMBER) {
+          index++; //Enclosing class
+        }
+
         int params = hasDescriptor ? descriptor.params.size() : md.params.length;
         for (int i = start; i < params; i++) {
           if (hasDescriptor || (signFields == null || signFields.get(i) == null)) {
@@ -787,7 +793,7 @@ public class ClassWriter {
             paramCount++;
           }
 
-          index += md.params[i].stackSize;
+          index += hasDescriptor ? descriptor.params.get(i).stackSize : md.params[i].stackSize;
         }
 
         buffer.append(')');

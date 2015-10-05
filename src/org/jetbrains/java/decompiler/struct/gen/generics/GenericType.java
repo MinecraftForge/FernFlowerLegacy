@@ -31,6 +31,7 @@ public class GenericType {
   public final int type;
   public final int arrayDim;
   public final String value;
+  public final int stackSize;
 
   private final List<GenericType> enclosingClasses = new ArrayList<GenericType>();
   private final List<GenericType> arguments = new ArrayList<GenericType>();
@@ -40,6 +41,7 @@ public class GenericType {
     this.type = type;
     this.arrayDim = arrayDim;
     this.value = value;
+    this.stackSize = getStackSize(type, arrayDim);
   }
 
   public GenericType(String signature) {
@@ -102,6 +104,7 @@ public class GenericType {
     this.type = type;
     this.arrayDim = arrayDim;
     this.value = value;
+    this.stackSize = getStackSize(type, arrayDim);
   }
 
   private static String getNextClassSignature(String value) {
@@ -208,6 +211,23 @@ public class GenericType {
 
     return value.substring(0, index + 1);
   }
+
+  private static int getStackSize(int type, int arrayDim) {
+      if (arrayDim > 0) {
+        return 1;
+      }
+
+      switch (type) {
+        case CodeConstants.TYPE_DOUBLE:
+        case CodeConstants.TYPE_LONG:
+          return 2;
+        case CodeConstants.TYPE_VOID:
+        case CodeConstants.TYPE_GROUP2EMPTY:
+          return 0;
+        default:
+          return 1;
+      }
+    }
 
   public GenericType decreaseArrayDim() {
     assert arrayDim > 0 : this;
