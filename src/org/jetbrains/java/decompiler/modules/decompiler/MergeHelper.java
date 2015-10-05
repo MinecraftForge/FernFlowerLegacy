@@ -501,10 +501,12 @@ public class MergeHelper {
         }
 
         if (initExprents[0].getRight().type != Exprent.EXPRENT_CONST ||
-            initExprents[1].getRight().type != Exprent.EXPRENT_FUNCTION) {
+            initExprents[1].getRight().type != Exprent.EXPRENT_FUNCTION ||
+            stat.getConditionExprent().type != Exprent.EXPRENT_FUNCTION) {
           return false;
         }
 
+        //FunctionExprent funcCond  = (FunctionExprent)drillNots(stat.getConditionExprent()); //TODO: Verify this is counter < copy.length
         FunctionExprent funcRight = (FunctionExprent)initExprents[1].getRight();
         FunctionExprent funcInc   = (FunctionExprent)lastExprent;
         ArrayExprent    arr       = (ArrayExprent)firstDoExprent.getRight();
@@ -523,6 +525,9 @@ public class MergeHelper {
 
         if (counter.getIndex() != index.getIndex() ||
             counter.getVersion() != index.getVersion()) {
+          return false;
+        }
+        if (ExprentUtil.isVarReferenced(counter, stat.getFirst(), index)) {
           return false;
         }
 
