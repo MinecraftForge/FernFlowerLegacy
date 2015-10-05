@@ -731,10 +731,9 @@ public class ExprProcessor implements CodeConstants {
       return "void";
     }
     else if (tp == CodeConstants.TYPE_OBJECT) {
-      //if (type.signatureDebugGens != null) {
-      //  GenericType gen = new GenericType(type.signatureDebugGens);
-      //  return GenericMain.getGenericCastTypeName(gen);
-      //}
+      if (type.genericType != null) {
+        return GenericMain.getGenericCastTypeName(type.genericType);
+      }
 
       String ret = buildJavaClassName(type.value);
       if (getShort) {

@@ -16,6 +16,7 @@
 package org.jetbrains.java.decompiler.struct.gen;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 public class VarType {  // TODO: optimize switch
@@ -46,7 +47,7 @@ public class VarType {  // TODO: optimize switch
   public final int typeFamily;
   public final int stackSize;
   public final boolean falseBoolean;
-
+  public GenericType genericType;
   public VarType(int type) {
     this(type, 0);
   }
@@ -55,6 +56,10 @@ public class VarType {  // TODO: optimize switch
     this(type, arrayDim, getChar(type));
   }
 
+  public VarType(GenericType type) {
+      this(VARTYPE_OBJECT.type);
+      this.genericType = type;
+  }
   public VarType(int type, int arrayDim, String value) {
     this(type, arrayDim, value, getFamily(type, arrayDim), getStackSize(type, arrayDim), false);
   }

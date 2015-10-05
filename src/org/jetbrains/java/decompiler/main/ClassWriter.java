@@ -607,6 +607,7 @@ public class ClassWriter {
       boolean clinit = false, init = false, dinit = false;
 
       MethodDescriptor md = MethodDescriptor.parseDescriptor(mt.getDescriptor());
+      DecompilerContext.setProperty(DecompilerContext.CURRENT_METHOD_DESCRIPTOR, md);
 
       int flags = mt.getAccessFlags();
       if ((flags & CodeConstants.ACC_NATIVE) != 0) {
@@ -686,7 +687,9 @@ public class ClassWriter {
           }
         }
       }
-
+      if (descriptor != null) {
+          md.addGenericDescriptor(descriptor);
+      }
       boolean throwsExceptions = false;
       int paramCount = 0;
 
