@@ -26,11 +26,8 @@ import org.jetbrains.java.decompiler.modules.decompiler.vars.CheckTypesResult;
 import org.jetbrains.java.decompiler.struct.attr.StructExceptionsAttribute;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
-import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
-import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
 import org.jetbrains.java.decompiler.struct.match.MatchEngine;
 import org.jetbrains.java.decompiler.struct.match.MatchNode;
-import org.jetbrains.java.decompiler.struct.match.IMatchable.MatchProperties;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.util.ArrayList;
@@ -93,8 +90,7 @@ public class ExitExprent extends Exprent {
         VarType ret = retType;
         boolean force = false;
         if (md.genericInfo != null && md.genericInfo.ret != null) {
-            ret = new VarType(md.genericInfo.ret);
-            force = true;
+            ret = md.genericInfo.ret;
         }
         buffer.append(" ");
         ExprProcessor.getCastedExprent(value, ret, buffer, indent, false, force, tracer);

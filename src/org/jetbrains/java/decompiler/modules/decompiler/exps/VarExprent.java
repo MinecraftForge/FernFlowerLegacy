@@ -111,7 +111,7 @@ public class VarExprent extends Exprent {
           buffer.append("final ");
         }
         if (lvt != null && lvt.getSig() != null) {
-          buffer.append(GenericMain.getGenericCastTypeName(new GenericType(lvt.getSig()))).append(" ");
+          buffer.append(ExprProcessor.getCastTypeName(GenericType.parse(lvt.getSig()))).append(" ");
         }
         else if (lvt != null) {
           buffer.append(ExprProcessor.getCastTypeName(lvt.getVarType())).append(" ");

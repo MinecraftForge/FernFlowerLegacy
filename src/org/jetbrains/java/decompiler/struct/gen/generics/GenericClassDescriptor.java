@@ -18,13 +18,15 @@ package org.jetbrains.java.decompiler.struct.gen.generics;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jetbrains.java.decompiler.struct.gen.VarType;
+
 public class GenericClassDescriptor {
 
-  public GenericType superclass;
+  public VarType superclass;
 
-  public final List<GenericType> superinterfaces = new ArrayList<GenericType>();
+  public final List<VarType> superinterfaces = new ArrayList<VarType>();
 
   public final List<String> fparameters = new ArrayList<String>();
 
-  public final List<List<GenericType>> fbounds = new ArrayList<List<GenericType>>();
+  public final List<List<VarType>> fbounds = new ArrayList<List<VarType>>();
 }

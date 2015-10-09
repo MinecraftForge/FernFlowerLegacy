@@ -47,7 +47,6 @@ public class VarType {  // TODO: optimize switch
   public final int typeFamily;
   public final int stackSize;
   public final boolean falseBoolean;
-  public GenericType genericType;
   public VarType(int type) {
     this(type, 0);
   }
@@ -56,15 +55,11 @@ public class VarType {  // TODO: optimize switch
     this(type, arrayDim, getChar(type));
   }
 
-  public VarType(GenericType type) {
-      this(VARTYPE_OBJECT.type);
-      this.genericType = type;
-  }
   public VarType(int type, int arrayDim, String value) {
     this(type, arrayDim, value, getFamily(type, arrayDim), getStackSize(type, arrayDim), false);
   }
 
-  private VarType(int type, int arrayDim, String value, int typeFamily, int stackSize, boolean falseBoolean) {
+  protected VarType(int type, int arrayDim, String value, int typeFamily, int stackSize, boolean falseBoolean) {
     this.type = type;
     this.arrayDim = arrayDim;
     this.value = value;
@@ -156,7 +151,7 @@ public class VarType {  // TODO: optimize switch
     }
   }
 
-  private static int getStackSize(int type, int arrayDim) {
+  protected static int getStackSize(int type, int arrayDim) {
     if (arrayDim > 0) {
       return 1;
     }
@@ -173,7 +168,7 @@ public class VarType {  // TODO: optimize switch
     }
   }
 
-  private static int getFamily(int type, int arrayDim) {
+  protected static int getFamily(int type, int arrayDim) {
     if (arrayDim > 0) {
       return CodeConstants.TYPE_FAMILY_OBJECT;
     }
@@ -301,6 +296,10 @@ public class VarType {  // TODO: optimize switch
       res.append(value);
     }
     return res.toString();
+  }
+
+  public boolean isGeneric() {
+    return false;
   }
 
   // type1 and type2 must not be null

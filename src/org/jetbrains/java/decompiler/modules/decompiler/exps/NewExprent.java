@@ -238,19 +238,17 @@ public class NewExprent extends Exprent {
           }
         }
 
-        if (DecompilerContext.getOption(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES)) {
-          StructGenericSignatureAttribute attr = (StructGenericSignatureAttribute)child.getWrapper().getClassStruct().getAttributes().getWithKey("Signature");
-          if (attr != null) {
-              GenericClassDescriptor descriptor = GenericMain.parseClassSignature(attr.getSignature());
-              // Anon classes can only be a child to one type. So either the first interface or the super class
-              if (descriptor.superinterfaces.size() > 0) {
-                  typename = GenericMain.getGenericCastTypeName(descriptor.superinterfaces.get(0));
-              }
-              else {
-                  typename = GenericMain.getGenericCastTypeName(descriptor.superclass);
-              }
+        GenericClassDescriptor descriptor = child.getWrapper().getClassStruct().getSignature();
+        if (descriptor != null) {
+          // Anon classes can only be a child to one type. So either the first interface or the super class
+          if (descriptor.superinterfaces.size() > 0) {
+            typename = ExprProcessor.getCastTypeName(descriptor.superinterfaces.get(0));
+          }
+          else {
+            typename = ExprProcessor.getCastTypeName(descriptor.superclass);
           }
         }
+
         buf.prepend("new " + typename);
 
         if (enclosing != null) {
