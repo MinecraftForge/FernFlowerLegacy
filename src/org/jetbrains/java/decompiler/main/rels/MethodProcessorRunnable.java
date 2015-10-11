@@ -28,9 +28,13 @@ import org.jetbrains.java.decompiler.modules.decompiler.*;
 import org.jetbrains.java.decompiler.modules.decompiler.deobfuscator.ExceptionDeobfuscator;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.IfExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DummyExitStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.IfStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor;
@@ -41,6 +45,10 @@ import java.io.IOException;
 import java.util.BitSet;
 
 public class MethodProcessorRunnable implements Runnable {
+
+  private static RootStatement currentRoot;
+
+  private static VarProcessor vp;
 
   public final Object lock = new Object();
 
@@ -126,7 +134,8 @@ public class MethodProcessorRunnable implements Runnable {
     }
 
     RootStatement root = DomHelper.parseGraph(graph, mt);
-
+    MethodProcessorRunnable.currentRoot = root;
+    MethodProcessorRunnable.vp = varProc;
     FinallyProcessor fProc = new FinallyProcessor(varProc);
     while (fProc.iterateGraph(mt, root, graph)) {
       root = DomHelper.parseGraph(graph, mt);
@@ -232,6 +241,9 @@ public class MethodProcessorRunnable implements Runnable {
     return finished;
   }
 
+  public static void printMethod(String desc) {
+      printMethod(currentRoot, desc, vp);
+  }
   public static void printMethod(Statement root, String name, VarProcessor varProc) {
     System.out.println(name + " {");
     if (root == null || root.getSequentialObjects() == null) {
@@ -280,7 +292,13 @@ public class MethodProcessorRunnable implements Runnable {
     int start = values.nextSetBit(0);
     int end = values.length()-1;
 
-    System.out.println(indent + "{" + statement.type + "}:" + statement.id + " (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
+    System.out.print(indent + "{" + statement.type + "}:" + statement.id + " (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
+    if (statement.type == Statement.TYPE_DO) {
+        System.out.print(" t:"+((DoStatement)statement).getLooptype());
+    } else if (statement.type == Statement.TYPE_BASICBLOCK) {
+        System.out.print(" i:"+((BasicBlockStatement)statement).getBlock().toStringOldIndices().replaceAll("\n", ";"));
+    }
+    System.out.println();
     for (StatEdge edge : statement.getAllSuccessorEdges())
       System.out.println(indent + " Dest: " + edge.getDestination());
 
@@ -322,6 +340,8 @@ public class MethodProcessorRunnable implements Runnable {
         AssignmentExprent assignmentExprent = (AssignmentExprent)exp;
         sb.append("{").append(printExprent(" ",assignmentExprent.getLeft(),varProc)).append(" =").append(printExprent(" ",assignmentExprent.getRight(),varProc)).append("}");
       } else if (exp instanceof IfExprent) {
+        sb.append(" ").append(exp.toJava(0, new BytecodeMappingTracer()));
+      } else if (exp instanceof FunctionExprent) {
         sb.append(" ").append(exp.toJava(0, new BytecodeMappingTracer()));
       }
       return sb.toString();

@@ -358,6 +358,8 @@ public class MergeHelper {
         }
         else {
           preData = current.getNeighbours(StatEdge.TYPE_REGULAR, Statement.DIRECTION_BACKWARD).get(0);
+          // we're not a basic block, so we can't dive inside for exprents
+          if (preData.type != Statement.TYPE_BASICBLOCK) break;
           preData = getLastDirectData(preData);
           if (preData != null && !preData.getExprents().isEmpty()) {
             initDoExprent = preData.getExprents().get(preData.getExprents().size() - 1);
