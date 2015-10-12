@@ -113,7 +113,8 @@ public class Fernflower implements IDecompiledData {
         if (found.contains(file.getAbsolutePath()))
           continue;
 
-        if (file.exists()) {
+        // only add .class files from classpath
+        if (file.exists() && (file.getName().endsWith(".class") || file.getName().endsWith(".jar"))) {
           DecompilerContext.getLogger().writeMessage("Adding File to context from classpath: " + file, Severity.INFO);
           structContext.addSpace(file, false);
           found.add(file.getAbsolutePath());
