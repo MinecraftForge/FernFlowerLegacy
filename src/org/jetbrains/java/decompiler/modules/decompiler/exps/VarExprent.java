@@ -66,6 +66,21 @@ public class VarExprent extends Exprent {
   }
 
   @Override
+  public VarType getGenericExprType() {
+    if (lvt != null && lvt.getSig() != null) {
+      // TODO; figure out why it's crashing, ugly fix for now
+      try {
+        return GenericType.parse(lvt.getSig());
+      } catch (StringIndexOutOfBoundsException ex) {
+      }
+    }
+    else if (lvt != null) {
+      return lvt.getVarType();
+    }
+    return getVarType();
+  }
+
+  @Override
   public int getExprentUse() {
     return Exprent.MULTIPLE_USES | Exprent.SIDE_EFFECTS_FREE;
   }

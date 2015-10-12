@@ -270,6 +270,15 @@ public class VarType {  // TODO: optimize switch
   }
 
   @Override
+  public int hashCode() {
+    int result = 1;
+    result = 37 * result + type;
+    result = 37 * result + arrayDim;
+    result = 37 * result + value == null ? 0 : value.hashCode();
+    return result;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o == this) {
       return true;

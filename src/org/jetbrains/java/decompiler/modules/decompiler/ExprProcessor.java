@@ -914,7 +914,7 @@ public class ExprProcessor implements CodeConstants {
 
     VarType rightType = exprent.getExprType();
 
-    TextBuffer res = exprent.toJava(indent, tracer);
+    TextBuffer res = exprent.toJava(indent, tracer, leftType);
 
     boolean cast =
       castAlways ||
