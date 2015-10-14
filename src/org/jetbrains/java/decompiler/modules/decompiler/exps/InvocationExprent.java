@@ -174,59 +174,67 @@ public class InvocationExprent extends Exprent {
 
     VarType type = getExprType();
 
-    List<VarType> toAdd = new ArrayList<VarType>();
-    if(upperBound != null/* && upperBound.type == CodeConstants.TYPE_OBJECT && descriptor.ret.type == CodeConstants.TYPE_OBJECT*/) {
-      genericArgs.clear();
-      //System.out.println("0: " + isStatic + " " + desc + " " + upperBound + " " + descriptor.ret + " " + upperBound.isGeneric());
-      /*if(desc == null) {
-        // more harn than gain
-        // Object -> String
-        if(descriptor.ret.value.equals("java/lang/Object") && !descriptor.ret.equals(upperBound)) {
-          genericArgs.add(upperBound);
-          System.out.println("1: " + upperBound + " " + descriptor.ret);
+    genericArgs.clear();
+
+    //System.out.println("0: " + isStatic + " " + desc + " " + upperBound + " " + descriptor.ret + " " + upperBound.isGeneric());
+    /*if(desc == null) {
+      // more harn than gain
+      // Object -> String
+      if(descriptor.ret.value.equals("java/lang/Object") && !descriptor.ret.equals(upperBound)) {
+        genericArgs.add(upperBound);
+        System.out.println("1: " + upperBound + " " + descriptor.ret);
+      }
+      // List -> List<String>
+      if(upperBound.isGeneric()) {
+        List<VarType> leftArgs = ((GenericType)upperBound).getArguments();
+        //System.out.println("22: " + upperBound + " " + leftArgs.get(0));
+        if(leftArgs.size() == 1 && descriptor.ret.equals(upperBound) && leftArgs.get(0).type == CodeConstants.TYPE_OBJECT) {
+          genericArgs.add(leftArgs.get(0));
+          System.out.println("2: " + upperBound.type + " " + upperBound + " " + leftArgs.get(0).type + " " + leftArgs.get(0));
         }
-        // List -> List<String>
-        if(upperBound.isGeneric()) {
-          List<VarType> leftArgs = ((GenericType)upperBound).getArguments();
-          //System.out.println("22: " + upperBound + " " + leftArgs.get(0));
-          if(leftArgs.size() == 1 && descriptor.ret.equals(upperBound) && leftArgs.get(0).type == CodeConstants.TYPE_OBJECT) {
-            genericArgs.add(leftArgs.get(0));
-            System.out.println("2: " + upperBound.type + " " + upperBound + " " + leftArgs.get(0).type + " " + leftArgs.get(0));
-          }
-        }
+      }
+    }*/
+    if(desc != null && desc.getSignature() != null) {
+      VarType ret = desc.getSignature().ret;
+      Map<VarType, VarType> map = new HashMap<VarType, VarType>();
+      // more harm than gain
+      // T -> String
+      /*if(upperBound != null && desc.getSignature().fparameters.size() == 1 && desc.getSignature().fparameters.get(0).equals(ret.value)) {
+        genericArgs.add(upperBound);
+        System.out.println("3: " + upperBound + " " + ret + " " + desc.getSignature().fparameters.get(0));
       }*/
-      if(desc != null && desc.getSignature() != null) {
-        VarType ret = desc.getSignature().ret;
-        // more harm than gain
-        // T -> String
-        /*if(desc.getSignature().fparameters.size() == 1 && desc.getSignature().fparameters.get(0).equals(ret.value)) {
-          genericArgs.add(upperBound);
-          System.out.println("3: " + upperBound + " " + ret + " " + desc.getSignature().fparameters.get(0));
-        }*/
-        // List<T> -> List<String>
-        if(upperBound.isGeneric() && ret.isGeneric()) {
-          List<VarType> leftArgs = ((GenericType)upperBound).getArguments();
-          List<VarType> rightArgs = ((GenericType)ret).getArguments();
-          List<String> fparams = desc.getSignature().fparameters;
-          if(leftArgs.size() == rightArgs.size() && rightArgs.size() == fparams.size()) {
-            for(int i = 0; i < leftArgs.size(); i++) {
-              VarType l = leftArgs.get(i);
-              VarType r = rightArgs.get(i);
-              if(l != null /*&& l.type == CodeConstants.TYPE_OBJECT && !l.equals(r)*/ && r.value.equals(fparams.get(i))) {
-                genericArgs.add(l);
-                //type = upperBound;
-                System.out.println("4: " + i + " " + l + " " + r + " " + fparams.get(i));
-              }
-              else {
-                genericArgs.clear();
-                break;
-              }
+      // List<T> -> List<String>
+      if(upperBound != null && upperBound.isGeneric() && ret.isGeneric()) {
+        List<VarType> leftArgs = ((GenericType)upperBound).getArguments();
+        List<VarType> rightArgs = ((GenericType)ret).getArguments();
+        List<String> fparams = desc.getSignature().fparameters;
+        if(leftArgs.size() == rightArgs.size() && rightArgs.size() == fparams.size()) {
+          for(int i = 0; i < leftArgs.size(); i++) {
+            VarType l = leftArgs.get(i);
+            VarType r = rightArgs.get(i);
+            if(l != null /*&& l.type == CodeConstants.TYPE_OBJECT && !l.equals(r)*/ && r.value.equals(fparams.get(i))) {
+              genericArgs.add(l);
+              map.put(r, l);
+              System.out.println("4: " + i + " " + l + " " + r + " " + fparams.get(i));
+            }
+            else {
+              genericArgs.clear();
+              map.clear();
+              break;
             }
           }
         }
       }
-    }
 
+      //System.out.println("infer map: "+ ret + " -> " + ret.remap(map));
+
+      if(!map.isEmpty()) {
+        // remap and return generic type
+        VarType newType = ret.remap(map);
+        if(ret != newType) return newType;
+      }
+      return ret;
+    }
     return type;
   }
   @Override
@@ -505,7 +513,7 @@ public class InvocationExprent extends Exprent {
         if(exprType != null /*&& exprType.type != CodeConstants.TYPE_NULL*/ && type != null && type.type == CodeConstants.TYPE_GENVAR) {
           type = exprType;
         }
-        //System.out.println("param: " + i + " " + newType + " " + exprType + " " + type + " " + lstParameters.get(i));
+        //System.out.println("param: " + i + " " + exprType + " " + type + " " + lstParameters.get(i));
         ExprProcessor.getCastedExprent(lstParameters.get(i), type, buff, indent, type.type != CodeConstants.TYPE_NULL, ambiguous, tracer);
         buf.append(buff);
 
