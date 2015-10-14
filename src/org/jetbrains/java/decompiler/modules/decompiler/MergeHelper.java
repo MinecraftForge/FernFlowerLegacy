@@ -491,6 +491,18 @@ public class MergeHelper {
         stat.setIncExprent(holder.getInstance());
         preData.getExprents().remove(initExprents[0]);
         firstData.getExprents().remove(firstDoExprent);
+
+        if (initExprents[1] != null && initExprents[1].getLeft().type == Exprent.EXPRENT_VAR &&
+            holder.getInstance().type == Exprent.EXPRENT_VAR) {
+          VarExprent copy = (VarExprent)initExprents[1].getLeft();
+          VarExprent inc = (VarExprent)holder.getInstance();
+          if (copy.getIndex() == inc.getIndex() && copy.getVersion() == inc.getVersion() && !ExprentUtil.isVarReferenced(inc, stat, copy)) {
+            preData.getExprents().remove(initExprents[1]);
+            initExprents[1].getRight().addBytecodeOffsets(initExprents[1].bytecode);
+            initExprents[1].getRight().addBytecodeOffsets(stat.getIncExprent().bytecode);
+            stat.setIncExprent(initExprents[1].getRight());
+          }
+        }
         return true;
       }
       else if (initExprents[0] != null && initExprents[1] != null && firstDoExprent != null) {
