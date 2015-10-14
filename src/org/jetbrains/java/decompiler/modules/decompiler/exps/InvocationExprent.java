@@ -208,14 +208,19 @@ public class InvocationExprent extends Exprent {
           List<VarType> leftArgs = ((GenericType)upperBound).getArguments();
           List<VarType> rightArgs = ((GenericType)ret).getArguments();
           List<String> fparams = desc.getSignature().fparameters;
-          // trivial case only for now
-          if(leftArgs.size() == 1 && rightArgs.size() == 1 && fparams.size() == 1) {
-            VarType l = leftArgs.get(0);
-            VarType r = rightArgs.get(0);
-            if(l != null /*&& l.type == CodeConstants.TYPE_OBJECT && !l.equals(r)*/ && r.value.equals(fparams.get(0))) {
-              genericArgs.add(leftArgs.get(0));
-              //type = upperBound;
-              System.out.println("4: " + leftArgs.get(0) + " " + rightArgs.get(0) + " " + fparams.get(0));
+          if(leftArgs.size() == rightArgs.size() && rightArgs.size() == fparams.size()) {
+            for(int i = 0; i < leftArgs.size(); i++) {
+              VarType l = leftArgs.get(i);
+              VarType r = rightArgs.get(i);
+              if(l != null /*&& l.type == CodeConstants.TYPE_OBJECT && !l.equals(r)*/ && r.value.equals(fparams.get(i))) {
+                genericArgs.add(l);
+                //type = upperBound;
+                System.out.println("4: " + i + " " + l + " " + r + " " + fparams.get(i));
+              }
+              else {
+                genericArgs.clear();
+                break;
+              }
             }
           }
         }
