@@ -95,7 +95,7 @@ public class GenericType extends VarType {
               }
 
               if (name_buff.length() > 0) {
-                name_buff.append('.');
+                name_buff.append('$');
               }
               name_buff.append(name);
 
@@ -115,6 +115,7 @@ public class GenericType extends VarType {
 
                 signature = signature.substring(cl.length() + 1);
               }
+              cl = getNextClassSignature(signature);
             }
           }
           break loop;
