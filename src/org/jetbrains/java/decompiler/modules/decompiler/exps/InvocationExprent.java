@@ -429,7 +429,7 @@ public class InvocationExprent extends Exprent {
         boolean ambiguous = setAmbiguousParameters.get(i);
         VarType type = descriptor.params[i];
 		VarType newType = null;
-        /*if(desc != null && desc.getSignature() != null && desc.getSignature().params.size() == lstParameters.size()) {
+        if(desc != null && desc.getSignature() != null && genericArgs.size() != 0 && desc.getSignature().params.size() == lstParameters.size()) {
           newType = desc.getSignature().params.get(i);
           boolean free = false;
           for(String param : desc.getSignature().fparameters) {
@@ -441,10 +441,44 @@ public class InvocationExprent extends Exprent {
           if(!free) {
             type = newType;
           }
-        }*/
+        }
         if(genArgs.containsKey(type)) {
           type = genArgs.get(type);
         }
+		else if(desc != null && desc.getSignature() != null && genericArgs.size() != 0) {
+			Map<VarType, VarType> genMap = new HashMap<VarType, VarType>();
+			for(int j = 0; j < genericArgs.size(); j++) {
+				VarType from = GenericType.parse("T" + desc.getSignature().fparameters.get(j) + ";");
+				VarType to = genericArgs.get(j);
+				genMap.put(from, to);
+				//System.out.println("map: (" + from + " -> " + to + ")");
+			}
+			if(genMap.containsKey(type)) {
+				type = genMap.get(type);
+			}
+			// this only checks 1 level deep right now
+			else if(type.isGeneric()) {
+				GenericType genType = (GenericType)type;
+				List<VarType> toArgs = new ArrayList<VarType>();
+				boolean changed = false;
+				VarType parent = genType.getParent();
+				if(genMap.containsKey(parent)) {
+					parent = genMap.get(parent);
+					changed = true;
+				}
+				for(VarType arg : genType.getArguments()) {
+					if(genMap.containsKey(arg)) {
+						toArgs.add(genMap.get(arg));
+						changed = true;
+					} else {
+						toArgs.add(arg);
+					}
+				}
+				if(changed) {
+					type = new GenericType(type.type, type.arrayDim, type.value, parent, toArgs, genType.getWildcard());
+				}
+			}
+		}
         /*if(desc != null && desc.getSignature() != null) {
           for(String ps: desc.getSignature().fparameters) {
             VarType param = GenericType.parse("T" + ps + ";");
@@ -509,8 +543,7 @@ public class InvocationExprent extends Exprent {
         boolean exact = true;
         for (int i = 0; i < md.params.length; i++) {
           if (!md.params[i].equals(lstParameters.get(i).getExprType())) {
-            // FIXME
-            //exact = false;
+            exact = false;
             break;
           }
         }
@@ -523,6 +556,7 @@ public class InvocationExprent extends Exprent {
     for (int i = 0; i < descriptor.params.length; i++) {
       VarType paramType = descriptor.params[i];
       for (StructMethod mtt : matches) {
+        if(mtt.getSignature() != null && mtt.getSignature().params.get(i).isGeneric()) break;
         MethodDescriptor md = MethodDescriptor.parseDescriptor(mtt.getDescriptor());
         if (!paramType.equals(md.params[i])) {
           ambiguous.set(i);

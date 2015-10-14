@@ -35,7 +35,7 @@ public class GenericType extends VarType {
   private final List<VarType> arguments;
   private final int wildcard;
 
-  private GenericType(int type, int arrayDim, String value, VarType parent, List<VarType> arguments, int wildcard) {
+  public GenericType(int type, int arrayDim, String value, VarType parent, List<VarType> arguments, int wildcard) {
     super(type, arrayDim, value, getFamily(type, arrayDim), getStackSize(type, arrayDim), false);
     this.parent = parent;
     this.arguments = arguments == null ? Collections.<VarType>emptyList() : arguments;
@@ -254,6 +254,10 @@ public class GenericType extends VarType {
   public GenericType decreaseArrayDim() {
     assert arrayDim > 0 : this;
     return new GenericType(type, arrayDim - 1, value, parent, arguments, wildcard);
+  }
+
+  public VarType getParent() {
+    return parent;
   }
 
   public List<VarType> getArguments() {
