@@ -837,6 +837,14 @@ public class Statement implements IMatchable {
     this.parent = parent;
   }
 
+  public Statement getTopParent() {
+    Statement ret = this;
+    while (ret.getParent() != null) {
+      ret = ret.getParent();
+    }
+    return ret;
+  }
+
   public HashSet<StatEdge> getLabelEdges() {  // FIXME: why HashSet?
     return labelEdges;
   }
