@@ -912,9 +912,9 @@ public class ExprProcessor implements CodeConstants {
                                          boolean castAlways,
                                          BytecodeMappingTracer tracer) {
 
-    VarType rightType = exprent.getExprType();
+    VarType rightType = exprent.getInferredExprType(leftType);
 
-    TextBuffer res = exprent.toJava(indent, tracer, leftType);
+    TextBuffer res = exprent.toJava(indent, tracer);
 
     boolean cast =
       castAlways ||

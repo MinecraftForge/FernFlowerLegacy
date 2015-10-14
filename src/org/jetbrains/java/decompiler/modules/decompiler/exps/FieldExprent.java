@@ -68,14 +68,15 @@ public class FieldExprent extends Exprent {
   }
 
   @Override
-  public VarType getGenericExprType() {
+  public VarType getInferredExprType(VarType upperBound) {
     StructClass cl = DecompilerContext.getStructContext().getClass(classname);
     while(cl != null) {
       StructField ft = cl.getField(name, descriptor.descriptorString);
       if(ft != null && ft.getSignature() != null) {
         return ft.getSignature().type;
       }
-      cl = DecompilerContext.getStructContext().getClass((String)cl.superClass.value);
+      if(cl.superClass == null) cl = null;
+      else cl = DecompilerContext.getStructContext().getClass((String)cl.superClass.value);
     }
     return getExprType();
   }

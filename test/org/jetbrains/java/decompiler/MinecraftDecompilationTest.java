@@ -47,6 +47,7 @@ public class MinecraftDecompilationTest {
         put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES,"1");
         put(IFernflowerPreferences.ASCII_STRING_CHARACTERS,"1");
         put(IFernflowerPreferences.REMOVE_SYNTHETIC,"0");
+        put(IFernflowerPreferences.INCLUDE_ENTIRE_CLASSPATH, "1");
     }};
     fixture.setUp(mcFFOptions);
     if (!new File(fixture.getTestDataDir(), MC_JAR).exists()) {

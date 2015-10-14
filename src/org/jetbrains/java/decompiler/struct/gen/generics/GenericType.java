@@ -318,4 +318,20 @@ public class GenericType extends VarType {
     }
     return buffer.toString();
   }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+	switch(getWildcard()) {
+      case GenericType.WILDCARD_EXTENDS:
+        buf.append("? extends ");
+        break;
+      case GenericType.WILDCARD_SUPER:
+        buf.append("? super ");
+      break;
+	}
+	buf.append(super.toString());
+    buf.append(getTypeArguments());
+	return buf.toString();
+  }
 }

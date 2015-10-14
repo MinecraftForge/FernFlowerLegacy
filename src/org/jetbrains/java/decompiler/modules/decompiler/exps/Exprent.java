@@ -74,7 +74,7 @@ public abstract class Exprent implements IMatchable {
     return VarType.VARTYPE_VOID;
   }
 
-  public VarType getGenericExprType() {
+  public VarType getInferredExprType(VarType upperBound) {
     return getExprType();
   }
 
@@ -128,10 +128,6 @@ public abstract class Exprent implements IMatchable {
 
   public Exprent copy() {
     throw new RuntimeException("not implemented");
-  }
-
-  public TextBuffer toJava(int indent, BytecodeMappingTracer tracer, VarType expectedType) {
-    return toJava(indent, tracer);
   }
 
   public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {

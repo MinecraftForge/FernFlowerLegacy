@@ -66,7 +66,7 @@ public class VarExprent extends Exprent {
   }
 
   @Override
-  public VarType getGenericExprType() {
+  public VarType getInferredExprType(VarType upperBound) {
     if (lvt != null && lvt.getSig() != null) {
       // TODO; figure out why it's crashing, ugly fix for now
       try {

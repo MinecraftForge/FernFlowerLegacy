@@ -435,6 +435,7 @@ public class ClassWriter {
       else {
         buffer.append(" = ");
         // FIXME: special case field initializer. Can map to more than one method (constructor) and bytecode intruction.
+        initializer.getInferredExprType(descriptor == null? fieldType : descriptor.type);
         buffer.append(initializer.toJava(indent, tracer));
       }
     }
