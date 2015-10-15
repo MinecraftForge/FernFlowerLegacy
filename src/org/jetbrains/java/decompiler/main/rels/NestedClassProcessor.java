@@ -1145,7 +1145,7 @@ public class NestedClassProcessor {
           res = classname.equals(((InvocationExprent)expr).getClassname());
           break;
         case Exprent.EXPRENT_NEW:
-          VarType newType = expr.getExprType();
+          VarType newType = ((NewExprent)expr).getNewType();
           res = newType.type == CodeConstants.TYPE_OBJECT && classname.equals(newType.value);
           break;
         case Exprent.EXPRENT_VAR:
@@ -1197,8 +1197,6 @@ public class NestedClassProcessor {
     // ret != exprent - replace exprent with ret
     Exprent processExprent(Exprent exprent);
   }
-
-
 
   private static void iterateExprents(DirectGraph graph, ExprentIteratorWithReplace iter) {
     LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
