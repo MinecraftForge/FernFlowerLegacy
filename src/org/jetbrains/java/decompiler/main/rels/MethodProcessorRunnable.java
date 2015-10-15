@@ -296,7 +296,7 @@ public class MethodProcessorRunnable implements Runnable {
     if (statement.type == Statement.TYPE_DO) {
         System.out.print(" t:"+((DoStatement)statement).getLooptype());
     } else if (statement.type == Statement.TYPE_BASICBLOCK) {
-        System.out.print(" i:"+((BasicBlockStatement)statement).getBlock().toStringOldIndices().replaceAll("\n", ";"));
+        System.out.print(" i:"+((BasicBlockStatement)statement).getBlock().toStringOldIndices().replaceAll("\n", ";").replaceAll("\r", ""));
     }
     System.out.println();
     for (StatEdge edge : statement.getAllSuccessorEdges())
