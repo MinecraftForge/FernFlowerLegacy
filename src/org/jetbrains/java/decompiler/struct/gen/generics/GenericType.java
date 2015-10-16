@@ -23,6 +23,7 @@ import org.jetbrains.java.decompiler.struct.gen.VarType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GenericType extends VarType {
 
@@ -35,7 +36,7 @@ public class GenericType extends VarType {
   private final List<VarType> arguments;
   private final int wildcard;
 
-  private GenericType(int type, int arrayDim, String value, VarType parent, List<VarType> arguments, int wildcard) {
+  public GenericType(int type, int arrayDim, String value, VarType parent, List<VarType> arguments, int wildcard) {
     super(type, arrayDim, value, getFamily(type, arrayDim), getStackSize(type, arrayDim), false);
     this.parent = parent;
     this.arguments = arguments == null ? Collections.<VarType>emptyList() : arguments;
@@ -256,6 +257,10 @@ public class GenericType extends VarType {
     return new GenericType(type, arrayDim - 1, value, parent, arguments, wildcard);
   }
 
+  public VarType getParent() {
+    return parent;
+  }
+
   public List<VarType> getArguments() {
     return arguments;
   }
@@ -317,5 +322,52 @@ public class GenericType extends VarType {
       buffer.append(">");
     }
     return buffer.toString();
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder();
+    switch(getWildcard()) {
+      case GenericType.WILDCARD_EXTENDS:
+        buf.append("? extends ");
+        break;
+      case GenericType.WILDCARD_SUPER:
+        buf.append("? super ");
+      break;
+    }
+    buf.append(super.toString());
+    buf.append(getTypeArguments());
+    return buf.toString();
+  }
+
+  @Override
+  public VarType remap(Map<VarType, VarType> map) {
+    VarType main = super.remap(map);
+    if(main != this) {
+      return main;
+    }
+    boolean changed = false;
+    VarType parent = getParent();
+    if(map.containsKey(parent)) {
+      parent = map.get(parent);
+      changed = true;
+    }
+    List<VarType> newArgs = new ArrayList<VarType>();
+    for(VarType arg : getArguments()) {
+      VarType newArg = null;
+      if(arg != null) {
+        newArg = arg.remap(map);
+      }
+      if(newArg != arg) {
+        newArgs.add(newArg);
+        changed = true;
+      } else {
+        newArgs.add(arg);
+      }
+    }
+    if(changed) {
+      return new GenericType(main.type, main.arrayDim, main.value, parent, newArgs, getWildcard());
+    }
+    return this;
   }
 }

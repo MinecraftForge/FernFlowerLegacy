@@ -74,6 +74,10 @@ public abstract class Exprent implements IMatchable {
     return VarType.VARTYPE_VOID;
   }
 
+  public VarType getInferredExprType(VarType upperBound) {
+    return getExprType();
+  }
+
   public int getExprentUse() {
     return 0;
   }

@@ -853,6 +853,7 @@ public class ExprProcessor implements CodeConstants {
     lst = Exprent.sortIndexed(lst);
 
     for (Exprent expr : lst) {
+      expr.getInferredExprType(null);
       TextBuffer content = expr.toJava(indent, tracer);
       if (content.length() > 0) {
         if (expr.type != Exprent.EXPRENT_VAR || !((VarExprent)expr).isClassDef()) {
@@ -912,7 +913,7 @@ public class ExprProcessor implements CodeConstants {
                                          boolean castAlways,
                                          BytecodeMappingTracer tracer) {
 
-    VarType rightType = exprent.getExprType();
+    VarType rightType = exprent.getInferredExprType(leftType);
 
     TextBuffer res = exprent.toJava(indent, tracer);
 

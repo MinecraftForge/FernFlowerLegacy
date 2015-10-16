@@ -66,6 +66,12 @@ public class AssignmentExprent extends Exprent {
   }
 
   @Override
+  public VarType getInferredExprType(VarType upperBound) {
+    //System.out.println("infer: " + upperBound + " = " + getExprType());
+    return getExprType();
+  }
+
+  @Override
   public CheckTypesResult checkExprTypeBounds() {
     CheckTypesResult result = new CheckTypesResult();
 
@@ -106,7 +112,7 @@ public class AssignmentExprent extends Exprent {
   @Override
   public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
     VarType leftType = left.getExprType();
-    VarType rightType = right.getExprType();
+    VarType rightType = right.getInferredExprType(left.getInferredExprType(null));
 
     boolean fieldInClassInit = false, hiddenField = false;
     if (left.type == Exprent.EXPRENT_FIELD) { // first assignment to a final field. Field name without "this" in front of it

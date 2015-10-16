@@ -19,6 +19,8 @@ import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
+import java.util.Map;
+
 public class VarType {  // TODO: optimize switch
 
   public static final VarType[] EMPTY_ARRAY = {};
@@ -270,6 +272,15 @@ public class VarType {  // TODO: optimize switch
   }
 
   @Override
+  public int hashCode() {
+    int result = 1;
+    result = 37 * result + type;
+    result = 37 * result + arrayDim;
+    result = 37 * result + value == null ? 0 : value.hashCode();
+    return result;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o == this) {
       return true;
@@ -418,5 +429,12 @@ public class VarType {  // TODO: optimize switch
       default:
         throw new IllegalArgumentException("Invalid type: " + c);
     }
+  }
+
+  public VarType remap(Map<VarType, VarType> map) {
+    if(map.containsKey(this)) {
+      return map.get(this);
+    }
+    return this;
   }
 }
