@@ -43,10 +43,8 @@ public class MinecraftDecompilationTest {
     // -din=1 -rbr=0 -dgs=1 -asc=1 -rsy=0
     Map<String,Object> mcFFOptions = new HashMap<String,Object>() {{
         put(IFernflowerPreferences.DECOMPILE_INNER,"1");
-        put(IFernflowerPreferences.REMOVE_BRIDGE, "0");
         put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES,"1");
         put(IFernflowerPreferences.ASCII_STRING_CHARACTERS,"1");
-        put(IFernflowerPreferences.REMOVE_SYNTHETIC,"0");
         put(IFernflowerPreferences.INCLUDE_ENTIRE_CLASSPATH, "1");
     }};
     fixture.setUp(mcFFOptions);
