@@ -24,6 +24,7 @@ import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
 import org.jetbrains.java.decompiler.modules.decompiler.StrongConnectivityHelper;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 import org.jetbrains.java.decompiler.struct.match.IMatchable;
 import org.jetbrains.java.decompiler.struct.match.MatchEngine;
 import org.jetbrains.java.decompiler.struct.match.MatchNode;
@@ -836,6 +837,14 @@ public class Statement implements IMatchable {
     this.parent = parent;
   }
 
+  public Statement getTopParent() {
+    Statement ret = this;
+    while (ret.getParent() != null) {
+      ret = ret.getParent();
+    }
+    return ret;
+  }
+
   public HashSet<StatEdge> getLabelEdges() {  // FIXME: why HashSet?
     return labelEdges;
   }
@@ -862,17 +871,17 @@ public class Statement implements IMatchable {
 
   // helper methods
   public String toString() {
-    return id.toString();
+    return String.format("{%d}:%d", type, id);
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public IMatchable findObject(MatchNode matchNode, int index) {
-    
+
     int node_type = matchNode.getType();
-    
+
     if (node_type == MatchNode.MATCHNODE_STATEMENT && !this.stats.isEmpty()) {
       String position = (String)matchNode.getRuleValue(MatchProperties.STATEMENT_POSITION);
       if(position != null) {
@@ -897,11 +906,11 @@ public class Statement implements IMatchable {
   }
 
   public boolean match(MatchNode matchNode, MatchEngine engine) {
-    
+
     if(matchNode.getType() != MatchNode.MATCHNODE_STATEMENT) {
       return false;
     }
-    
+
     for(Entry<MatchProperties, RuleValue> rule : matchNode.getRules().entrySet()) {
       switch(rule.getKey()) {
       case STATEMENT_TYPE:
@@ -932,10 +941,23 @@ public class Statement implements IMatchable {
         }
         break;
       }
-      
+
     }
-    
+
     return true;
   }
-  
+
+  private StartEndPair endpoints;
+  public StartEndPair getStartEndRange() {
+    if (endpoints == null) {
+      int start = Integer.MAX_VALUE;
+      int end   = Integer.MIN_VALUE;
+      for (Statement st : getStats()) {
+        start = Math.min(start, st.getBasichead().getBlock().getStartInstruction());
+        end   = Math.max(end,   st.getBasichead().getBlock().getEndInstruction());
+      }
+      endpoints = new StartEndPair(start, end);
+    }
+    return endpoints;
+  }
 }

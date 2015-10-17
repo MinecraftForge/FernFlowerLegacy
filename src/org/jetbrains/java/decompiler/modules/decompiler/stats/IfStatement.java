@@ -22,6 +22,7 @@ import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.IfExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 import org.jetbrains.java.decompiler.struct.match.IMatchable;
 import org.jetbrains.java.decompiler.struct.match.MatchEngine;
 import org.jetbrains.java.decompiler.struct.match.MatchNode;
@@ -212,7 +213,7 @@ public class IfStatement extends Statement {
     buf.append(first.toJava(indent, tracer));
 
     if (isLabeled()) {
-      buf.appendIndent(indent).append("label").append(this.id.toString()).append(":").appendLineSeparator();
+      buf.appendIndent(indent).append("label").append(this.getStartEndRange().start).append(":").appendLineSeparator();
       tracer.incrementCurrentSourceLine();
     }
 
@@ -233,7 +234,7 @@ public class IfStatement extends Statement {
         }
 
         if (ifedge.labeled) {
-          buf.append(" label").append(ifedge.closure.id.toString());
+          buf.append(" label").append(ifedge.closure.getStartEndRange().start);
         }
       }
       buf.append(";").appendLineSeparator();
@@ -425,18 +426,18 @@ public class IfStatement extends Statement {
   public StatEdge getElseEdge() {
     return elseedge;
   }
-  
+
   // *****************************************************************************
   // IMatchable implementation
   // *****************************************************************************
-  
+
   public IMatchable findObject(MatchNode matchNode, int index) {
 
     IMatchable object = super.findObject(matchNode, index);
     if(object != null) {
       return object;
     }
-    
+
     if(matchNode.getType() == MatchNode.MATCHNODE_EXPRENT) {
       String position = (String)matchNode.getRuleValue(MatchProperties.EXPRENT_POSITION);
       if("head".equals(position)) {
@@ -459,8 +460,14 @@ public class IfStatement extends Statement {
         return false;
       }
     }
-        
+
     return true;
   }
-  
+
+  @Override
+  public StartEndPair getStartEndRange() {
+    return StartEndPair.join(super.getStartEndRange(),
+      ifstat != null ? ifstat.getStartEndRange() : null,
+      elsestat != null ? elsestat.getStartEndRange(): null);
+  }
 }

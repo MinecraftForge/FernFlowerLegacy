@@ -88,7 +88,9 @@ public class SSAUConstructorSparseEx {
     FlattenStatementsHelper flatthelper = new FlattenStatementsHelper();
     DirectGraph dgraph = flatthelper.buildDirectGraph(root);
 
-    HashSet<Integer> setInit = new HashSet<Integer>();
+    org.jetbrains.java.decompiler.util.DotExporter.toDotFile(dgraph, mt, "ssauSplitVariables");
+
+    List<Integer> setInit = new ArrayList<Integer>(); //Important: HashSets have undefined order, so use a ordered list.
     for (int i = 0; i < 64; i++) {
       setInit.add(i);
     }
@@ -98,25 +100,25 @@ public class SSAUConstructorSparseEx {
 
     setCatchMaps(root, dgraph, flatthelper);
 
-    //		try {
-    //			DotExporter.toDotFile(dgraph, new File("c:\\Temp\\gr12_my.dot"));
-    //		} catch(Exception ex) {ex.printStackTrace();}
 
+    int itteration = 1;
     HashSet<String> updated = new HashSet<String>();
     do {
       //			System.out.println("~~~~~~~~~~~~~ \r\n"+root.toJava());
-      ssaStatements(dgraph, updated, false);
+      ssaStatements(dgraph, updated, false, mt, itteration++);
       //			System.out.println("~~~~~~~~~~~~~ \r\n"+root.toJava());
     }
     while (!updated.isEmpty());
 
 
-    ssaStatements(dgraph, updated, true);
+    ssaStatements(dgraph, updated, true, mt, itteration);
 
     ssuversions.initDominators();
   }
 
-  private void ssaStatements(DirectGraph dgraph, HashSet<String> updated, boolean calcLiveVars) {
+  private void ssaStatements(DirectGraph dgraph, HashSet<String> updated, boolean calcLiveVars, StructMethod mt, int itteration) {
+
+    org.jetbrains.java.decompiler.util.DotExporter.toDotFile(dgraph, mt, "ssauStatements_" + itteration);
 
     for (DirectNode node : dgraph.nodes) {
 

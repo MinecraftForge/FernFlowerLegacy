@@ -17,6 +17,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructMethod;
@@ -28,13 +29,22 @@ import java.util.Map.Entry;
 public class VarProcessor {
 
   private Map<VarVersionPair, String> mapVarNames = new HashMap<VarVersionPair, String>();
+  private Map<VarVersionPair, LVTVariable> mapVarLVTs = new HashMap<VarVersionPair, LVTVariable>();
   private VarVersionsProcessor varVersions;
   private final Map<VarVersionPair, String> thisVars = new HashMap<VarVersionPair, String>();
   private final Set<VarVersionPair> externalVars = new HashSet<VarVersionPair>();
+  private LocalVariableTable lvt;
 
   public void setVarVersions(RootStatement root) {
+    Map<Integer, VarVersionPair> mapOriginalVarIndices = null;
+    if (varVersions != null) {
+        mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
+    }
     varVersions = new VarVersionsProcessor();
     varVersions.setVarVersions(root);
+    if (mapOriginalVarIndices != null) {
+        varVersions.getMapOriginalVarIndices().putAll(mapOriginalVarIndices);
+    }
   }
 
   public void setVarDefinitions(Statement root) {
@@ -44,12 +54,12 @@ public class VarProcessor {
     new VarDefinitionHelper(root, mt, this).setVarDefinitions();
   }
 
-  public void setDebugVarNames(Map<VarVersionPair, String> mapDebugVarNames) {
+  public void setDebugVarNames(Map<Integer, List<LVTVariable>> mapDebugVarNames) {
     if (varVersions == null) {
       return;
     }
 
-    Map<Integer, Integer> mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
+    Map<Integer, VarVersionPair> mapOriginalVarIndices = varVersions.getMapOriginalVarIndices();
 
     List<VarVersionPair> listVars = new ArrayList<VarVersionPair>(mapVarNames.keySet());
     Collections.sort(listVars, new Comparator<VarVersionPair>() {
@@ -60,22 +70,44 @@ public class VarProcessor {
     });
 
     Map<String, Integer> mapNames = new HashMap<String, Integer>();
-
+    Map<Integer,SortedSet<VarVersionPair>> indexedPairs = new HashMap<Integer,SortedSet<VarVersionPair>>();
+    Comparator<VarVersionPair> vvpVersionComparator = new Comparator<VarVersionPair>() {
+        @Override
+        public int compare(VarVersionPair o1, VarVersionPair o2) {
+            return o1.version - o2.version;
+        }
+    };
+    for (Entry<Integer, VarVersionPair> vvp : mapOriginalVarIndices.entrySet()) {
+        SortedSet<VarVersionPair> set = indexedPairs.get(vvp.getValue().var);
+        if (set == null) {
+            set = new TreeSet<VarVersionPair>(vvpVersionComparator);
+            indexedPairs.put(vvp.getValue().var, set);
+        }
+        set.add(vvp.getValue());
+    }
     for (VarVersionPair pair : listVars) {
       String name = mapVarNames.get(pair);
 
-      Integer index = mapOriginalVarIndices.get(pair.var);
-      if (index != null) {
-        VarVersionPair key = new VarVersionPair(index.intValue(), pair.version);
-        if (mapDebugVarNames.containsKey(key)) {
-          name = mapDebugVarNames.get(key);
+      VarVersionPair key = mapOriginalVarIndices.get(pair.var);
+
+      boolean lvtName = false;
+      if (key != null) {
+        if (indexedPairs.containsKey(key.var)) {
+          int veridx = indexedPairs.get(key.var).headSet(key).size();
+          List<LVTVariable> list = mapDebugVarNames.get(key.var);
+          if (list != null && list.size()>veridx) {
+              name = list.get(veridx).name;
+              lvtName = true;
+          } else if (list == null) {
+              // we're an exception type, probably. let's just fall through
+          }
         }
       }
 
       Integer counter = mapNames.get(name);
       mapNames.put(name, counter == null ? counter = new Integer(0) : ++counter);
 
-      if (counter > 0) {
+      if (counter > 0 && !lvtName) {
         name += String.valueOf(counter);
       }
 
@@ -95,7 +127,9 @@ public class VarProcessor {
   }
 
   public void setVarType(VarVersionPair pair, VarType type) {
-    varVersions.setVarType(pair, type);
+    if (varVersions != null) {
+      varVersions.setVarType(pair, type);
+    }
   }
 
   public String getVarName(VarVersionPair pair) {
@@ -120,5 +154,45 @@ public class VarProcessor {
 
   public Set<VarVersionPair> getExternalVars() {
     return externalVars;
+  }
+
+  public void setLVT(LocalVariableTable lvt) {
+    this.lvt = lvt;
+  }
+
+  public LocalVariableTable getLVT() {
+    return this.lvt;
+  }
+
+  public void findLVT(VarExprent varExprent, int bytecodeOffset) {
+    LVTVariable var = this.lvt == null ? null : lvt.find(varExprent.getIndex(), bytecodeOffset);
+    if (var != null) {
+      varExprent.setLVT(var);
+    }
+  }
+
+  public int getRemapped(int index) {
+    VarVersionPair res = varVersions.getMapOriginalVarIndices().get(index);
+    if (res == null) return index;
+    return res.var;
+  }
+
+  public void copyVarInfo(VarVersionPair from, VarVersionPair to) {
+    setVarName(to, getVarName(from));
+    setVarFinal(to, getVarFinal(from));
+    setVarType(to, getVarType(from));
+    varVersions.getMapOriginalVarIndices().put(to.var, varVersions.getMapOriginalVarIndices().get(from.var));
+  }
+
+  public VarVersionsProcessor getVarVersions() {
+    return varVersions;
+  }
+
+  public void setVarLVT(VarVersionPair var, LVTVariable lvt) {
+    mapVarLVTs.put(var, lvt);
+  }
+
+  public LVTVariable getVarLVT(VarVersionPair var) {
+    return mapVarLVTs.get(var);
   }
 }

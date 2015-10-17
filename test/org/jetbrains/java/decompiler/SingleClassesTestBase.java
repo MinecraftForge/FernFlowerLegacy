@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public abstract class SingleClassesTestBase {
-  private DecompilerTestFixture fixture;
+  protected DecompilerTestFixture fixture;
 
   @Before
   public void setUp() throws IOException {

@@ -16,8 +16,13 @@
 package org.jetbrains.java.decompiler.struct;
 
 import org.jetbrains.java.decompiler.code.*;
+import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
+import org.jetbrains.java.decompiler.struct.attr.StructGenericSignatureAttribute;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericMain;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericMethodDescriptor;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 import org.jetbrains.java.decompiler.util.VBStyleCollection;
 
@@ -46,6 +51,7 @@ public class StructMethod extends StructMember {
   private final StructClass classStruct;
   private final String name;
   private final String descriptor;
+  private GenericMethodDescriptor signature;
 
   private boolean containsCode = false;
   private int localVariables = 0;
@@ -99,7 +105,13 @@ public class StructMethod extends StructMember {
       return null;
     }
 
-    return super.readAttribute(in, pool, name);
+    StructGeneralAttribute attribute = super.readAttribute(in, pool, name);
+    if ("Signature".equals(name) && DecompilerContext.getOption(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES)) {
+      StructGenericSignatureAttribute signature = (StructGenericSignatureAttribute)attribute;
+      this.signature = GenericMain.parseMethodSignature(signature.getSignature());
+    }
+
+    return attribute;
   }
 
   public void expandData() throws IOException {
@@ -388,5 +400,9 @@ public class StructMethod extends StructMember {
 
   public InstructionSequence getInstructionSequence() {
     return seq;
+  }
+
+  public GenericMethodDescriptor getSignature() {
+    return signature;
   }
 }

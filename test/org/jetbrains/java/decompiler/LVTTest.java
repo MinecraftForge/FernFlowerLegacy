@@ -18,6 +18,7 @@ package org.jetbrains.java.decompiler;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,5 +30,27 @@ public class LVTTest extends SingleClassesTestBase {
     }};
   }
 
-  @Test public void testMatch1() { doTest("pkg/TestLVT"); }
+  @Override
+    public void setUp() throws IOException {
+        super.setUp();
+        fixture.cleanup = false;
+    }
+//  @Test public void testMatch1() { doTest("pkg/TestPPMM"); }
+//  @Test public void testMatchLM() { doTest("pkg/TestLexManosLVT"); }
+//  @Test public void testMatch1() { doTest("pkg/TestLVT"); }
+//  @Test public void testMatch1() { doTest("pkg/TestLoopMerging"); }
+//  @Test public void testMatch2() { doTest("pkg/TestLVTScoping"); }
+//  @Test public void testMCWorld() { doTest("net/minecraft/world/World"); }
+//  @Test public void testMCGuiCmdBlock() { doTest("net/minecraft/client/gui/GuiCommandBlock"); }
+
+//  @Test public void testMCWorld() { doTest("net/minecraft/world/World"); }
+
+//  @Test public void testMCGuiCmdBlock() { doTest("net/minecraft/client/gui/GuiCommandBlock"); }
+
+//  @Test public void testMCBlockFence() { doTest("net/minecraft/block/BlockFence"); }
+
+//  @Test public void testMCAbstractTexture() { doTest("net/minecraft/client/multiplayer/ServerAddress"); }
+//  @Test public void testMCAbstractResourcePack() { doTest("net/minecraft/client/resources/AbstractResourcePack"); }
+//  @Test public void testMCGuiShareToLan() { doTest("net/minecraft/client/gui/GuiShareToLan"); }
+//  @Test public void testMCContainerPlayer() { doTest("net/minecraft/inventory/ContainerPlayer"); }
 }

@@ -16,8 +16,12 @@
 package org.jetbrains.java.decompiler.modules.decompiler.sforms;
 
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.ConstExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.*;
+import org.jetbrains.java.decompiler.struct.gen.VarType;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -215,6 +219,7 @@ public class FlattenStatementsHelper {
                 sourcenode = node;
                 break;
               case DoStatement.LOOP_FOR:
+              case DoStatement.LOOP_FOREACH:
                 DirectNode nodeinit = new DirectNode(DirectNode.NODE_INIT, stat, stat.id + "_init");
                 if (dostat.getInitExprent() != null) {
                   nodeinit.exprents = dostat.getInitExprentList();
@@ -222,7 +227,9 @@ public class FlattenStatementsHelper {
                 graph.nodes.putWithKey(nodeinit, nodeinit.id);
 
                 DirectNode nodecond = new DirectNode(DirectNode.NODE_CONDITION, stat, stat.id + "_cond");
-                nodecond.exprents = dostat.getConditionExprentList();
+                if (looptype != DoStatement.LOOP_FOREACH) {
+                  nodecond.exprents = dostat.getConditionExprentList();
+                }
                 graph.nodes.putWithKey(nodecond, nodecond.id);
 
                 DirectNode nodeinc = new DirectNode(DirectNode.NODE_INCREMENT, stat, stat.id + "_inc");

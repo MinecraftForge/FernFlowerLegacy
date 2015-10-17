@@ -60,6 +60,8 @@ public interface IFernflowerPreferences {
   String LINE_SEPARATOR_WIN = "\r\n";
   String LINE_SEPARATOR_LIN = "\n";
 
+  String INCLUDE_ENTIRE_CLASSPATH = "iec";
+
   Map<String, Object> DEFAULTS = Collections.unmodifiableMap(new HashMap<String, Object>() {{
     put(REMOVE_BRIDGE, "1");
     put(REMOVE_SYNTHETIC, "0");
@@ -93,5 +95,6 @@ public interface IFernflowerPreferences {
     put(BANNER, "");
     put(UNIT_TEST_MODE, "0");
     put(DUMP_ORIGINAL_LINES, "0");
+    put(INCLUDE_ENTIRE_CLASSPATH, "0");
   }});
 }

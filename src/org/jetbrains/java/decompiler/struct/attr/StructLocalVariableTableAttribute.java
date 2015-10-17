@@ -17,12 +17,12 @@ package org.jetbrains.java.decompiler.struct.attr;
 
 import org.jetbrains.java.decompiler.modules.decompiler.vars.LVTVariable;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.LocalVariableTable;
-import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -37,7 +37,7 @@ import java.util.Map;
 */
 public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
 
-  private Map<VarVersionPair, String> EMPTY_LVT = Collections.emptyMap();
+  private Map<Integer, List<LVTVariable>> EMPTY_LVT = Collections.emptyMap();
   private LocalVariableTable lvt;
 
   @Override
@@ -61,11 +61,20 @@ public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
   }
 
   public void addLocalVariableTable(StructLocalVariableTableAttribute attr) {
-    lvt.mergeLVTs(attr.lvt);
-    attr.lvt = lvt;
+    if (lvt == null) {
+      lvt = attr.lvt;
+    }
+    else {
+      lvt.mergeLVTs(attr.lvt);
+      attr.lvt = lvt;
+    }
   }
 
-  public Map<VarVersionPair, String> getMapVarNames() {
+  public Map<Integer, List<LVTVariable>> getMapVarNames() {
     return lvt == null ? EMPTY_LVT : lvt.getMapVarNames();
+  }
+
+  public LocalVariableTable getLVT() {
+    return lvt;
   }
 }

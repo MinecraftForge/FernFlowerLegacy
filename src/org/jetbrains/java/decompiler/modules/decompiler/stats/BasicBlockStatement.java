@@ -24,6 +24,7 @@ import org.jetbrains.java.decompiler.main.TextBuffer;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
+import org.jetbrains.java.decompiler.modules.decompiler.vars.StartEndPair;
 
 public class BasicBlockStatement extends Statement {
 
@@ -93,5 +94,14 @@ public class BasicBlockStatement extends Statement {
 
   public BasicBlock getBlock() {
     return block;
+  }
+
+  @Override
+  public StartEndPair getStartEndRange() {
+    if (block.size() > 0) {
+      return new StartEndPair(block.getStartInstruction(), block.getEndInstruction());
+    } else {
+      return null;
+    }
   }
 }

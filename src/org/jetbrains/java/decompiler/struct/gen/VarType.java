@@ -16,7 +16,10 @@
 package org.jetbrains.java.decompiler.struct.gen;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
+
+import java.util.Map;
 
 public class VarType {  // TODO: optimize switch
 
@@ -46,7 +49,6 @@ public class VarType {  // TODO: optimize switch
   public final int typeFamily;
   public final int stackSize;
   public final boolean falseBoolean;
-
   public VarType(int type) {
     this(type, 0);
   }
@@ -59,7 +61,7 @@ public class VarType {  // TODO: optimize switch
     this(type, arrayDim, value, getFamily(type, arrayDim), getStackSize(type, arrayDim), false);
   }
 
-  private VarType(int type, int arrayDim, String value, int typeFamily, int stackSize, boolean falseBoolean) {
+  protected VarType(int type, int arrayDim, String value, int typeFamily, int stackSize, boolean falseBoolean) {
     this.type = type;
     this.arrayDim = arrayDim;
     this.value = value;
@@ -151,7 +153,7 @@ public class VarType {  // TODO: optimize switch
     }
   }
 
-  private static int getStackSize(int type, int arrayDim) {
+  protected static int getStackSize(int type, int arrayDim) {
     if (arrayDim > 0) {
       return 1;
     }
@@ -168,7 +170,7 @@ public class VarType {  // TODO: optimize switch
     }
   }
 
-  private static int getFamily(int type, int arrayDim) {
+  protected static int getFamily(int type, int arrayDim) {
     if (arrayDim > 0) {
       return CodeConstants.TYPE_FAMILY_OBJECT;
     }
@@ -270,6 +272,15 @@ public class VarType {  // TODO: optimize switch
   }
 
   @Override
+  public int hashCode() {
+    int result = 1;
+    result = 37 * result + type;
+    result = 37 * result + arrayDim;
+    result = 37 * result + value == null ? 0 : value.hashCode();
+    return result;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (o == this) {
       return true;
@@ -296,6 +307,10 @@ public class VarType {  // TODO: optimize switch
       res.append(value);
     }
     return res.toString();
+  }
+
+  public boolean isGeneric() {
+    return false;
   }
 
   // type1 and type2 must not be null
@@ -414,5 +429,12 @@ public class VarType {  // TODO: optimize switch
       default:
         throw new IllegalArgumentException("Invalid type: " + c);
     }
+  }
+
+  public VarType remap(Map<VarType, VarType> map) {
+    if(map.containsKey(this)) {
+      return map.get(this);
+    }
+    return this;
   }
 }

@@ -19,20 +19,36 @@ import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.code.InstructionSequence;
 import org.jetbrains.java.decompiler.code.cfg.ControlFlowGraph;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.main.collectors.CounterContainer;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.modules.code.DeadCodeHelper;
 import org.jetbrains.java.decompiler.modules.decompiler.*;
 import org.jetbrains.java.decompiler.modules.decompiler.deobfuscator.ExceptionDeobfuscator;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.FunctionExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.IfExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.BasicBlockStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.DummyExitStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.IfStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.RootStatement;
+import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarProcessor;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructMethod;
 
 import java.io.IOException;
+import java.util.BitSet;
 
 public class MethodProcessorRunnable implements Runnable {
+
+  private static RootStatement currentRoot;
+
+  private static VarProcessor vp;
 
   public final Object lock = new Object();
 
@@ -117,11 +133,12 @@ public class MethodProcessorRunnable implements Runnable {
       DecompilerContext.getLogger().writeMessage("Heavily obfuscated exception ranges found!", IFernflowerLogger.Severity.WARN);
     }
 
-    RootStatement root = DomHelper.parseGraph(graph);
-
+    RootStatement root = DomHelper.parseGraph(graph, mt);
+    MethodProcessorRunnable.currentRoot = root;
+    MethodProcessorRunnable.vp = varProc;
     FinallyProcessor fProc = new FinallyProcessor(varProc);
     while (fProc.iterateGraph(mt, root, graph)) {
-      root = DomHelper.parseGraph(graph);
+      root = DomHelper.parseGraph(graph, mt);
     }
 
     // remove synchronized exception handler
@@ -138,14 +155,14 @@ public class MethodProcessorRunnable implements Runnable {
     proc.processStatement(root, cl);
 
     SequenceHelper.condenseSequences(root);
-    
+
     while (true) {
       StackVarsProcessor stackProc = new StackVarsProcessor();
       stackProc.simplifyStackVars(root, mt, cl);
 
       varProc.setVarVersions(root);
 
-      if (!new PPandMMHelper().findPPandMM(root)) {
+      if (!new PPandMMHelper(varProc).findPPandMM(root)) {
         break;
       }
     }
@@ -154,11 +171,15 @@ public class MethodProcessorRunnable implements Runnable {
       LabelHelper.cleanUpEdges(root);
 
       while (true) {
-        MergeHelper.enhanceLoops(root);
+        if (EliminateLoopsHelper.eliminateLoops(root, cl)) {
+          continue;
+        }
 
         if (LoopExtractHelper.extractLoops(root)) {
           continue;
         }
+
+        MergeHelper.enhanceLoops(root);
 
         if (!IfHelper.mergeAllIfs(root)) {
           break;
@@ -197,6 +218,8 @@ public class MethodProcessorRunnable implements Runnable {
 
     SecondaryFunctionsHelper.identifySecondaryFunctions(root);
 
+    SynchronizedHelper.cleanSynchronizedVar(root);
+
     varProc.setVarDefinitions(root);
 
     // must be the last invocation, because it makes the statement structure inconsistent
@@ -216,5 +239,111 @@ public class MethodProcessorRunnable implements Runnable {
 
   public boolean isFinished() {
     return finished;
+  }
+
+  public static void printMethod(String desc) {
+      printMethod(currentRoot, desc, vp);
+  }
+  public static void printMethod(Statement root, String name, VarProcessor varProc) {
+    System.out.println(name + " {");
+    if (root == null || root.getSequentialObjects() == null) {
+        System.out.println("}");
+        return;
+    }
+    for (Object obj : root.getSequentialObjects()) {
+      if (obj instanceof Statement) {
+        printStatement((Statement)obj, "  ",varProc);
+      } else {
+        System.out.println("  " + obj.getClass().getSimpleName());
+      }
+    }
+    if (root instanceof RootStatement) {
+      printStatement(((RootStatement)root).getDummyExit(), "  ",varProc);
+    }
+    System.out.println("}");
+  }
+
+  public static void getOffset(Statement st, BitSet values) {
+    if (st instanceof DummyExitStatement && ((DummyExitStatement)st).bytecode != null)
+      values.or(((DummyExitStatement)st).bytecode);
+    if (st.getExprents() != null) {
+      for (Exprent e : st.getExprents()) {
+        e.getBytecodeRange(values);
+      }
+    } else {
+      for (Object obj : st.getSequentialObjects()) {
+        if (obj == null) {
+          continue;
+        }
+        if (obj instanceof Statement) {
+          getOffset((Statement)obj, values);
+        } else if (obj instanceof Exprent) {
+          ((Exprent)obj).getBytecodeRange(values);
+        } else {
+          System.out.println("WTF?" + obj.getClass());
+        }
+      }
+    }
+  }
+
+  private static void printStatement(Statement statement, String indent, VarProcessor varProc) {
+    BitSet values = new BitSet();
+    getOffset(statement, values);
+    int start = values.nextSetBit(0);
+    int end = values.length()-1;
+
+    System.out.print(indent + "{" + statement.type + "}:" + statement.id + " (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
+    if (statement.type == Statement.TYPE_DO) {
+        System.out.print(" t:"+((DoStatement)statement).getLooptype());
+    } else if (statement.type == Statement.TYPE_BASICBLOCK) {
+        System.out.print(" i:"+((BasicBlockStatement)statement).getBlock().toStringOldIndices().replaceAll("\n", ";").replaceAll("\r", ""));
+    }
+    System.out.println();
+    for (StatEdge edge : statement.getAllSuccessorEdges())
+      System.out.println(indent + " Dest: " + edge.getDestination());
+
+    if (statement.getExprents() != null) {
+      for(Exprent exp : statement.getExprents()) {
+          System.out.println(printExprent(indent + "  ", exp,varProc));
+      }
+    }
+    indent += "  ";
+    for (Object obj : statement.getSequentialObjects()) {
+      if (obj == null) {
+        continue;
+      }
+      if (obj instanceof Statement) {
+        printStatement((Statement)obj, indent,varProc);
+      } else if (obj instanceof Exprent) {
+          System.out.println(printExprent(indent, (Exprent) obj, varProc));
+      } else {
+        System.out.println(indent + obj.getClass().getSimpleName());
+      }
+    }
+  }
+  private static String printExprent(String indent, Exprent exp, VarProcessor varProc) {
+      StringBuffer sb = new StringBuffer();
+      sb.append(indent);
+      BitSet values = new BitSet();
+      exp.getBytecodeRange(values);
+      sb.append("(").append(values.nextSetBit(0)).append(", ").append(values.length()-1).append(") ");
+      sb.append(exp.getClass().getSimpleName());
+      sb.append(" ").append(exp.id).append(" ");
+      if (exp instanceof VarExprent) {
+          VarExprent varExprent = (VarExprent)exp;
+        int currindex = varExprent.getIndex();
+        int origindex = varProc == null ? -2 : varProc.getRemapped(currindex);
+        sb.append("[").append(currindex).append(":").append(origindex).append(", ").append(varExprent.isStack()).append("]");
+        if (varProc != null && varProc.getLVT() != null)
+          sb.append(varProc.getLVT().getCandidates(origindex));
+      } else if (exp instanceof AssignmentExprent) {
+        AssignmentExprent assignmentExprent = (AssignmentExprent)exp;
+        sb.append("{").append(printExprent(" ",assignmentExprent.getLeft(),varProc)).append(" =").append(printExprent(" ",assignmentExprent.getRight(),varProc)).append("}");
+      } else if (exp instanceof IfExprent) {
+        sb.append(" ").append(exp.toJava(0, new BytecodeMappingTracer()));
+      } else if (exp instanceof FunctionExprent) {
+        sb.append(" ").append(exp.toJava(0, new BytecodeMappingTracer()));
+      }
+      return sb.toString();
   }
 }

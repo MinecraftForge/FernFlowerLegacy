@@ -110,6 +110,7 @@ public class ContextUnit {
         // classes
         for (int i = 0; i < classes.size(); i++) {
           StructClass cl = classes.get(i);
+          if (!cl.isOwn()) continue;
           String entryName = decompiledData.getClassEntryName(cl, classEntries.get(i));
           if (entryName != null) {
             String content = decompiledData.getClassContent(cl);

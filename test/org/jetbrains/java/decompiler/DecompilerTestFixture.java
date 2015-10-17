@@ -31,6 +31,7 @@ public class DecompilerTestFixture {
   private File tempDir;
   private File targetDir;
   private ConsoleDecompiler decompiler;
+  public boolean cleanup = true;
 
   public void setUp() throws IOException {
     setUp(Collections.<String, Object>emptyMap());
@@ -62,7 +63,7 @@ public class DecompilerTestFixture {
   }
 
   public void tearDown() {
-    if (tempDir != null) {
+    if (tempDir != null && cleanup) {
       delete(tempDir);
     }
   }

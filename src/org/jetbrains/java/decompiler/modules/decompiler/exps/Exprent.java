@@ -17,7 +17,6 @@ package org.jetbrains.java.decompiler.modules.decompiler.exps;
 
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -73,6 +72,10 @@ public abstract class Exprent implements IMatchable {
 
   public VarType getExprType() {
     return VarType.VARTYPE_VOID;
+  }
+
+  public VarType getInferredExprType(VarType upperBound) {
+    return getExprType();
   }
 
   public int getExprentUse() {

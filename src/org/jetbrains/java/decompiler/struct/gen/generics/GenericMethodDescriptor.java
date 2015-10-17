@@ -18,15 +18,17 @@ package org.jetbrains.java.decompiler.struct.gen.generics;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jetbrains.java.decompiler.struct.gen.VarType;
+
 public class GenericMethodDescriptor {
 
   public final List<String> fparameters = new ArrayList<String>();
 
-  public final List<List<GenericType>> fbounds = new ArrayList<List<GenericType>>();
+  public final List<List<VarType>> fbounds = new ArrayList<List<VarType>>();
 
-  public final List<GenericType> params = new ArrayList<GenericType>();
+  public final List<VarType> params = new ArrayList<VarType>();
 
-  public GenericType ret;
+  public VarType ret;
 
-  public final List<GenericType> exceptions = new ArrayList<GenericType>();
+  public final List<VarType> exceptions = new ArrayList<VarType>();
 }
