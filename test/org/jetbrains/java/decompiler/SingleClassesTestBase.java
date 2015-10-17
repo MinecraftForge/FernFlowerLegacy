@@ -32,73 +32,88 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public abstract class SingleClassesTestBase {
-  protected DecompilerTestFixture fixture;
+	protected DecompilerTestFixture fixture;
 
-  @Before
-  public void setUp() throws IOException {
-    fixture = new DecompilerTestFixture();
-    fixture.setUp(getDecompilerOptions());
-  }
+	@Before
+	public void setUp() throws IOException {
+		fixture = new DecompilerTestFixture();
+		fixture.setUp(getDecompilerOptions());
+	}
 
-  @After
-  public void tearDown() {
-    fixture.tearDown();
-    fixture = null;
-  }
+	@After
+	public void tearDown() {
+		fixture.tearDown();
+		fixture = null;
+	}
 
-  protected Map<String, Object> getDecompilerOptions() {
-    return Collections.emptyMap();
-  }
+	protected Map<String, Object> getDecompilerOptions() {
+		return Collections.emptyMap();
+	}
 
-  protected void doTest(String testFile) {
-    try {
-      File classFile = new File(fixture.getTestDataDir(), "/classes/" + testFile + ".class");
-      assertTrue(classFile.isFile());
-      String testName = classFile.getName().substring(0, classFile.getName().length() - 6);
+	protected void doTest(String testFile, String... companionFiles) {
+		try {
+			File classFile = new File(fixture.getTestDataDir(), "/classes/" + testFile + ".class");
+			assertTrue(classFile.isFile());
+			String testName = classFile.getName().substring(0, classFile.getName().length() - 6);
 
-      ConsoleDecompiler decompiler = fixture.getDecompiler();
+			ConsoleDecompiler decompiler = fixture.getDecompiler();
 
-      for (File file : collectClasses(classFile)) decompiler.addSpace(file, true);
-      decompiler.decompileContext();
+			for (File file : collectClasses(classFile))
+				decompiler.addSpace(file, true);
 
-      File decompiledFile = new File(fixture.getTargetDir(), testName + ".java");
-      assertTrue(decompiledFile.isFile());
-      File referenceFile = new File(fixture.getTestDataDir(), "results/" + testName + ".dec");
-      assertTrue(referenceFile.isFile());
-      compareContent(decompiledFile, referenceFile);
-    }
-    catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
+			for (String companionFile : companionFiles) {
+				File companionClassFile = new File(fixture.getTestDataDir(), "/classes/" + companionFile + ".class");
+				assertTrue(companionClassFile.isFile());
+				for (File file : collectClasses(companionClassFile)) {
+					decompiler.addSpace(file, true);
+				}
+			}
+			decompiler.decompileContext();
 
-  private static List<File> collectClasses(File classFile) {
-    List<File> files = new ArrayList<File>();
-    files.add(classFile);
+			File decompiledFile = new File(fixture.getTargetDir(), testName + ".java");
+			assertTrue(decompiledFile.isFile());
+			File referenceFile = new File(fixture.getTestDataDir(), "results/" + testName + ".dec");
+			assertTrue(referenceFile.isFile());
+			compareContent(decompiledFile, referenceFile);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    File parent = classFile.getParentFile();
-    if (parent != null) {
-      final String pattern = classFile.getName().replace(".class", "") + "\\$.+\\.class";
-      File[] inner = parent.listFiles(new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-          return name.matches(pattern);
-        }
-      });
-      if (inner != null) Collections.addAll(files, inner);
-    }
+	private static List<File> collectClasses(File classFile) {
+		List<File> files = new ArrayList<File>();
+		files.add(classFile);
 
-    return files;
-  }
+		File parent = classFile.getParentFile();
+		if (parent != null) {
+			final String pattern = classFile.getName().replace(".class", "") + "\\$.+\\.class";
+			File[] inner = parent.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.matches(pattern);
+				}
+			});
+			if (inner != null)
+				Collections.addAll(files, inner);
+		}
 
-  private static void compareContent(File decompiledFile, File referenceFile) throws IOException {
-    String decompiledContent = new String(InterpreterUtil.getBytes(decompiledFile), "UTF-8");
+		return files;
+	}
 
-    String referenceContent = new String(InterpreterUtil.getBytes(referenceFile), "UTF-8");
-    if (InterpreterUtil.IS_WINDOWS && !referenceContent.contains("\r\n")) {
-      referenceContent = referenceContent.replace("\n", "\r\n");  // fix for broken Git checkout on Windows
-    }
+	private static void compareContent(File decompiledFile, File referenceFile) throws IOException {
+		String decompiledContent = new String(InterpreterUtil.getBytes(decompiledFile), "UTF-8");
 
-    assertEquals(referenceContent, decompiledContent);
-  }
+		String referenceContent = new String(InterpreterUtil.getBytes(referenceFile), "UTF-8");
+		if (InterpreterUtil.IS_WINDOWS && !referenceContent.contains("\r\n")) {
+			referenceContent = referenceContent.replace("\n", "\r\n"); // fix
+																		// for
+																		// broken
+																		// Git
+																		// checkout
+																		// on
+																		// Windows
+		}
+
+		assertEquals(referenceContent, decompiledContent);
+	}
 }
