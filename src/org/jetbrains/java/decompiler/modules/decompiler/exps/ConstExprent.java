@@ -182,16 +182,16 @@ public class ConstExprent extends Exprent {
           String doublefield;
           if (literal) {
             if (Double.isNaN(dval)) {
-              return new TextBuffer("0.0D / 0.0");
+              return new TextBuffer("0.0D / 0.0D");
             }
             else if (dval == Double.POSITIVE_INFINITY) {
-              return new TextBuffer("1.0D / 0.0");
+              return new TextBuffer("1.0D / 0.0D");
             }
             else if (dval == Double.NEGATIVE_INFINITY) {
-              return new TextBuffer("-1.0D / 0.0");
+              return new TextBuffer("-1.0D / 0.0D");
             }
             else {
-              return new TextBuffer(value.toString()).append("D");
+              return new TextBuffer(trimZeros(value.toString())).append("D");
             }
           }
           else if (Double.isNaN(dval)) {
@@ -219,16 +219,16 @@ public class ConstExprent extends Exprent {
           String floatfield;
           if (literal) {
             if (Double.isNaN(fval)) {
-              return new TextBuffer("0.0F / 0.0");
+              return new TextBuffer("0.0F / 0.0F");
             }
             else if (fval == Double.POSITIVE_INFINITY) {
-              return new TextBuffer("1.0F / 0.0");
+              return new TextBuffer("1.0F / 0.0F");
             }
             else if (fval == Double.NEGATIVE_INFINITY) {
-              return new TextBuffer("-1.0F / 0.0");
+              return new TextBuffer("-1.0F / 0.0F");
             }
             else {
-              return new TextBuffer(value.toString()).append("F");
+              return new TextBuffer(trimZeros(value.toString())).append("F");
             }
           }
           else if (Float.isNaN(fval)) {
