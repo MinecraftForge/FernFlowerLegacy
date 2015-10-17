@@ -213,7 +213,7 @@ public class IfStatement extends Statement {
     buf.append(first.toJava(indent, tracer));
 
     if (isLabeled()) {
-      buf.appendIndent(indent).append("label").append(this.id.toString()).append(":").appendLineSeparator();
+      buf.appendIndent(indent).append("label").append(this.getStartEndRange().start).append(":").appendLineSeparator();
       tracer.incrementCurrentSourceLine();
     }
 
@@ -234,7 +234,7 @@ public class IfStatement extends Statement {
         }
 
         if (ifedge.labeled) {
-          buf.append(" label").append(ifedge.closure.id.toString());
+          buf.append(" label").append(ifedge.closure.getStartEndRange().start);
         }
       }
       buf.append(";").appendLineSeparator();
