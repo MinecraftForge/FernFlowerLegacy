@@ -3,7 +3,7 @@ apply plugin: 'idea'
 apply plugin: 'maven'
 apply plugin: 'java'
 
-version = "1.0"
+version = "2.0"
 group = "net.minecraftforge" //not sure if we shoulkd publish under this name, but it's our fork so meh
 archivesBaseName = "fernflower"
 
