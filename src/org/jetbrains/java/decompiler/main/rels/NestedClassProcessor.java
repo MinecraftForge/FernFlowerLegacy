@@ -43,8 +43,6 @@ import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
-import com.sun.xml.internal.ws.org.objectweb.asm.Opcodes;
-
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -135,7 +133,7 @@ public class NestedClassProcessor {
       return;
     }
 
-    final int STATIC_FINAL_SYNTHETIC = Opcodes.ACC_STATIC | Opcodes.ACC_FINAL | Opcodes.ACC_SYNTHETIC;
+    final int STATIC_FINAL_SYNTHETIC = CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL | CodeConstants.ACC_SYNTHETIC;
     Set<String> potentialFields = new HashSet<String>();
     for (StructField fd : node.classStruct.getFields()) {
       if ((fd.getAccessFlags() & STATIC_FINAL_SYNTHETIC) == STATIC_FINAL_SYNTHETIC && "[I".equals(fd.getDescriptor())) {
