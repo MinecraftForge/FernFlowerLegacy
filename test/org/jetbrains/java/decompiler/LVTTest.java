@@ -26,7 +26,13 @@ public class LVTTest extends SingleClassesTestBase {
   @Override
   protected Map<String, Object> getDecompilerOptions() {
     return new HashMap<String, Object>() {{
-      put(IFernflowerPreferences.USE_DEBUG_LINE_NUMBERS, "1");
+      put(IFernflowerPreferences.DECOMPILE_INNER,"1");
+      put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES,"1");
+      put(IFernflowerPreferences.ASCII_STRING_CHARACTERS,"1");
+      put(IFernflowerPreferences.LOG_LEVEL, "TRACE");
+      put(IFernflowerPreferences.REMOVE_SYNTHETIC, "1");
+      put(IFernflowerPreferences.REMOVE_BRIDGE, "1");
+      put(IFernflowerPreferences.INCLUDE_ENTIRE_CLASSPATH, "1");
     }};
   }
 
