@@ -757,6 +757,18 @@ public class VarDefinitionHelper {
           if (from.var == var.getIndex() && from.version == var.getVersion()) {
             itr.remove();
           }
+          else if (to.var == var.getIndex() && to.version == var.getVersion()) {
+            Map<VarVersionPair, VarType> mapExprentMinTypes = varproc.getVarVersions().getTypeProcessor().getMapExprentMinTypes();
+            Map<VarVersionPair, VarType> mapExprentMaxTypes = varproc.getVarVersions().getTypeProcessor().getMapExprentMaxTypes();
+            VarType merged = getMergedType(mapExprentMinTypes.get(from), mapExprentMinTypes.get(to),
+                                           mapExprentMaxTypes.get(from), mapExprentMaxTypes.get(to));
+
+            if (merged == null) { // Something went wrong.. This SHOULD be non-null
+              continue;
+            }
+
+            var.setVarType(merged);
+          }
         }
       }
     }
@@ -785,7 +797,7 @@ public class VarDefinitionHelper {
 
           ConstExprent right = (ConstExprent)ass.getRight();
           if (right.getConstType() == VarType.VARTYPE_NULL) {
-              continue;
+            continue;
           }
           VarType merged = getMergedType(mapExprentMinTypes.get(from), mapExprentMinTypes.get(to),
                                          mapExprentMaxTypes.get(from), mapExprentMaxTypes.get(to));
@@ -865,7 +877,7 @@ public class VarDefinitionHelper {
   }
   private static class VPPEntry extends SimpleEntry<VarVersionPair, VarVersionPair> {
     public VPPEntry(VarExprent key, VarVersionPair value) {
-        super(new VarVersionPair(key), value);
+      super(new VarVersionPair(key), value);
     }
   }
 }
