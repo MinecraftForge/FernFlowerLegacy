@@ -280,7 +280,7 @@ public class GenericType extends VarType {
       clsName = DecompilerContext.getImportCollector().getShortName(value.replace('/', '.'));
     }
     else if (parent.isGeneric()) {
-      clsName = ((GenericType)parent).getCastName() + "." + value.substring(value.lastIndexOf('.') + 1);
+      clsName = ((GenericType)parent).getCastName() + "." + value.substring(parent.value.length() + 1);
     }
     else {
       clsName = DecompilerContext.getImportCollector().getShortName(parent.value.replace('/', '.')) + "." + value.substring(value.lastIndexOf('.') + 1);
