@@ -434,7 +434,10 @@ public class VarDefinitionHelper {
     }
 
     for (VarType var : md.params) {
-      types.put(new VarVersionPair(index, 0), varproc.getLVT().getCandidates(index).get(0));
+      List<LVTVariable> vars = varproc.getLVT().getCandidates(index);
+      if (vars != null) {
+        types.put(new VarVersionPair(index, 0), vars.get(0));
+      }
       index += var.stackSize;
     }
 
