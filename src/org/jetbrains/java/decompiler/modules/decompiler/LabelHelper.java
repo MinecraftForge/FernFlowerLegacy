@@ -33,7 +33,7 @@ public class LabelHelper {
 
     liftClosures(root);
 
-    lowContinueLabels(root, new HashSet<StatEdge>());
+    lowContinueLabels(root, new LinkedHashSet<StatEdge>());
 
     lowClosures(root);
   }
@@ -99,7 +99,7 @@ public class LabelHelper {
     }
   }
 
-  public static void lowContinueLabels(Statement stat, HashSet<StatEdge> edges) {
+  public static void lowContinueLabels(Statement stat, LinkedHashSet<StatEdge> edges) {
 
     boolean ok = (stat.type != Statement.TYPE_DO);
     if (!ok) {
@@ -131,7 +131,7 @@ public class LabelHelper {
         lowContinueLabels(st, edges);
       }
       else {
-        lowContinueLabels(st, new HashSet<StatEdge>());
+        lowContinueLabels(st, new LinkedHashSet<StatEdge>());
       }
     }
   }
