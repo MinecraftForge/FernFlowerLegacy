@@ -648,6 +648,9 @@ public class VarDefinitionHelper {
               if (obj == stat.getFirst()) {
                 leaked.putAll(leaked_n); //First is outside the scope so leak!
               }
+              else {
+                leaked_n.clear();
+              }
             }
             else if (stat.type == Statement.TYPE_TRYCATCH ||
                      stat.type == Statement.TYPE_CATCHALL) {
