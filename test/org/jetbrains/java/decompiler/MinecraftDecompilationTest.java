@@ -177,7 +177,7 @@ public class MinecraftDecompilationTest {
             set.add(md5digest);
             System.out.println("Orig md5:"+md5s.get(fname));
             System.out.println("Variant md5: "+md5digest);
-            writeFile(expected,fname,outRoot);
+            if (expected != null) writeFile(expected,fname,outRoot);
             writeFile(found,fname+"."+md5digest,outRoot);
         } else if (!md5digest.equals(md5s.get(fname))) {
           System.out.println("Existing Variant: " + fname);
