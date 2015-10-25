@@ -18,6 +18,7 @@ package org.jetbrains.java.decompiler.main;
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.ClassesProcessor.ClassNode;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
+import org.jetbrains.java.decompiler.main.extern.IAbstractParameterRenamer;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.rels.ClassWrapper;
@@ -730,6 +731,9 @@ public class ClassWriter {
 
             buffer.append(' ');
             String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
+            if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0) {
+                parameterName = renameParameterIfPossible(parameterName, index, methodWrapper, flags);
+            }
             buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
 
             firstParameter = false;
@@ -835,7 +839,13 @@ public class ClassWriter {
     return !hideMethod;
   }
 
-  private static void mapLines(TextBuffer code, StructLineNumberTableAttribute table, BytecodeMappingTracer tracer, int startLine) {
+  private String renameParameterIfPossible(String parameterName, int index, MethodWrapper methodWrapper, int flags) {
+    if (DecompilerContext.getProperty("abstractparamrenamer")==null) return parameterName;
+    IAbstractParameterRenamer property = (IAbstractParameterRenamer) DecompilerContext.getProperty("abstractparamrenamer");
+    return property.renameParameter(parameterName, index, methodWrapper, flags);
+}
+
+private static void mapLines(TextBuffer code, StructLineNumberTableAttribute table, BytecodeMappingTracer tracer, int startLine) {
     // build line start offsets map
     HashMap<Integer, Set<Integer>> lineStartOffsets = new HashMap<Integer, Set<Integer>>();
     for (Map.Entry<Integer, Integer> entry : tracer.getMapping().entrySet()) {
