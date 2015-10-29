@@ -483,11 +483,11 @@ public class DomHelper {
 
         boolean same = (post == head);
 
-        HashSet<Statement> setNodes = new HashSet<Statement>();
+        LinkedHashSet<Statement> setNodes = new LinkedHashSet<Statement>();
         HashSet<Statement> setPreds = new HashSet<Statement>();
 
         // collect statement nodes
-        HashSet<Statement> setHandlers = new HashSet<Statement>();
+        HashSet<Statement> setHandlers = new LinkedHashSet<Statement>();
         setHandlers.add(head);
         while (true) {
 

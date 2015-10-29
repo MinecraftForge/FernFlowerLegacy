@@ -28,9 +28,9 @@ public class FastExtendedPostdominanceHelper {
 
   private List<Statement> lstReversePostOrderList;
 
-  private HashMap<Integer, FastFixedSet<Integer>> mapSupportPoints = new HashMap<Integer, FastFixedSet<Integer>>();
+  private HashMap<Integer, FastFixedSet<Integer>> mapSupportPoints = new LinkedHashMap<Integer, FastFixedSet<Integer>>();
 
-  private final HashMap<Integer, FastFixedSet<Integer>> mapExtPostdominators = new HashMap<Integer, FastFixedSet<Integer>>();
+  private final HashMap<Integer, FastFixedSet<Integer>> mapExtPostdominators = new LinkedHashMap<Integer, FastFixedSet<Integer>>();
 
   private Statement statement;
 
@@ -40,7 +40,7 @@ public class FastExtendedPostdominanceHelper {
 
     this.statement = statement;
 
-    HashSet<Integer> set = new HashSet<Integer>();
+    HashSet<Integer> set = new LinkedHashSet<Integer>();
     for (Statement st : statement.getStats()) {
       set.add(st.id);
     }

@@ -20,6 +20,7 @@ import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 
 public class GeneralStatement extends Statement {
@@ -39,7 +40,7 @@ public class GeneralStatement extends Statement {
     first = head;
     stats.addWithKey(head, head.id);
 
-    HashSet<Statement> set = new HashSet<Statement>(statements);
+    LinkedHashSet<Statement> set = new LinkedHashSet<Statement>(statements);
     set.remove(head);
 
     for (Statement st : set) {
