@@ -88,6 +88,8 @@ public class LVTVariable implements Comparable<LVTVariable> {
   }
 
   public LVTVariable rename(String newName) {
-    return new LVTVariable(newName, desc, start, end, index, isLVTT);
+    LVTVariable lvtVariable = new LVTVariable(newName, desc, start, end, index, isLVTT);
+    lvtVariable.sig = this.sig;
+    return lvtVariable;
   }
 }

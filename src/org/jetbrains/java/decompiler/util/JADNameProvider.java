@@ -46,6 +46,7 @@ public class JADNameProvider implements IVariableNameProvider {
       remap.put("long", "int");
     }
 
+    @Override
     public void addParentContext(IVariableNameProvider iparent) {
         JADNameProvider parent = (JADNameProvider) iparent;
         last = new HashMap<String, Holder>();
@@ -94,7 +95,7 @@ public class JADNameProvider implements IVariableNameProvider {
           continue;
         }
         if (type.indexOf('<') != -1) {
-          type = type.substring(0, type.indexOf('<') - 1);
+          type = type.substring(0, type.indexOf('<'));
         }
         if (type.indexOf('.') != -1) {
           type = type.substring(type.lastIndexOf('.')+1);

@@ -24,6 +24,7 @@ import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.extern.IIdentifierRenamer;
 import org.jetbrains.java.decompiler.main.rels.ClassWrapper;
 import org.jetbrains.java.decompiler.main.rels.LambdaProcessor;
+import org.jetbrains.java.decompiler.main.rels.MethodWrapper;
 import org.jetbrains.java.decompiler.main.rels.NestedClassProcessor;
 import org.jetbrains.java.decompiler.main.rels.NestedMemberAccess;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.InvocationExprent;
@@ -334,6 +335,13 @@ public class ClassesProcessor {
     node.wrapper = wrapper;
 
     for (ClassNode nd : node.nested) {
+      // Stuff the parent context into enclosed child methods
+      if (nd.enclosingMethod != null) {
+        MethodWrapper encmeth = wrapper.getMethods().getWithKey(nd.enclosingMethod);
+        for (final MethodWrapper meth : nd.getWrapper().getMethods()) {
+          meth.methodStruct.renamer.addParentContext(encmeth.methodStruct.renamer);
+        }
+      }
       initWrappers(nd);
     }
   }
