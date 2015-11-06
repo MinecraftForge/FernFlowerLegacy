@@ -253,8 +253,10 @@ public class MethodProcessorRunnable implements Runnable {
     for (Object obj : root.getSequentialObjects()) {
       if (obj instanceof Statement) {
         printStatement((Statement)obj, "  ",varProc);
+      } else if (obj == null) {
+          System.out.println("  null");
       } else {
-        System.out.println("  " + obj.getClass().getSimpleName());
+          System.out.println("  " + obj.getClass().getSimpleName());
       }
     }
     if (root instanceof RootStatement) {
@@ -292,7 +294,7 @@ public class MethodProcessorRunnable implements Runnable {
     int start = values.nextSetBit(0);
     int end = values.length()-1;
 
-    System.out.print(indent + "{" + statement.type + "}:" + statement.id + " (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
+    System.out.print(indent + "{" + statement.getClass().getSimpleName() + "}:" + statement.id + " (" + start + ", " + end + ") " + statement.getClass().getSimpleName());
     if (statement.type == Statement.TYPE_DO) {
         System.out.print(" t:"+((DoStatement)statement).getLooptype());
     } else if (statement.type == Statement.TYPE_BASICBLOCK) {
