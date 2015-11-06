@@ -46,26 +46,23 @@ public class DecompilerTestFixture {
     assertTrue("current dir: " + new File("").getAbsolutePath(), isTestDataDir(testDataDir));
 
     //noinspection SSBasedInspection
-    tempDir = getRandomDir();
-    if (tempDir.exists()) tempDir.delete();
+    tempDir = File.createTempFile("decompiler_test_", "_dir");
+    assertTrue(tempDir.delete());
+
     targetDir = new File(tempDir, "decompiled");
-    targetDir.mkdirs();
+    assertTrue(targetDir.mkdirs());
     decompiler = new ConsoleDecompiler(this.targetDir, new HashMap<String, Object>() {{
       put(IFernflowerPreferences.LOG_LEVEL, "warn");
       put(IFernflowerPreferences.DECOMPILE_GENERIC_SIGNATURES, "1");
       put(IFernflowerPreferences.REMOVE_SYNTHETIC, "1");
       put(IFernflowerPreferences.REMOVE_BRIDGE, "1");
       put(IFernflowerPreferences.LITERALS_AS_IS, "1");
-      put(IFernflowerPreferences.MAX_PROCESSING_METHOD, "60000");
+      put(IFernflowerPreferences.UNIT_TEST_MODE, "1");
       putAll(options);
     }});
   }
 
-  protected File getRandomDir() throws IOException {
-	  return File.createTempFile("decompiler_test_", "_dir");
-  }
-
-public void tearDown() {
+  public void tearDown() {
     if (tempDir != null && cleanup) {
       delete(tempDir);
     }
@@ -98,5 +95,6 @@ public void tearDown() {
         for (File f : files) delete(f);
       }
     }
+    assertTrue(file.delete());
   }
 }

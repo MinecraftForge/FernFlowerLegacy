@@ -18,6 +18,7 @@ package org.jetbrains.java.decompiler.modules.decompiler.vars;
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
+import org.jetbrains.java.decompiler.main.rels.MethodWrapper;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.ConstExprent;
@@ -424,35 +425,47 @@ public class VarDefinitionHelper {
 
   private void propogateLVTs(Statement stat) {
     MethodDescriptor md = MethodDescriptor.parseDescriptor(mt.getDescriptor());
-    Map<VarVersionPair, VarInfo> types = new HashMap<VarVersionPair, VarInfo>();
+    Map<VarVersionPair, VarInfo> types = new LinkedHashMap<VarVersionPair, VarInfo>();
 
     int index = 0;
     if (!mt.hasModifier(CodeConstants.ACC_STATIC)) {
-      types.put(new VarVersionPair(index, 0), new VarInfo(varproc.getLVT().getCandidates(index++).get(0), new VarType(mt.getClassStruct().qualifiedName)));
+      types.put(new VarVersionPair(index++, 0), new VarInfo(null,null));
     }
 
     for (VarType var : md.params) {
       List<LVTVariable> vars = varproc.getLVT().getCandidates(index);
       if (vars != null) {
-        types.put(new VarVersionPair(index, 0), new VarInfo(vars.get(0), var));
+        types.put(new VarVersionPair(index, 0), new VarInfo(null,null));
       }
       index += var.stackSize;
     }
 
     findTypes(stat, types);
 
-    //renameTypes(types);
-
+    Map<VarVersionPair,String> typeNames = new LinkedHashMap<VarVersionPair,String>();
     for (Entry<VarVersionPair, VarInfo> e : types.entrySet()) {
-      if (e.getValue().lvt != null) {
-        varproc.setVarLVT(e.getKey(), e.getValue().lvt);
-      }
+      typeNames.put(e.getKey(), e.getValue().typeName());
     }
-
+    StructMethod current_meth = (StructMethod)DecompilerContext.getProperty(DecompilerContext.CURRENT_METHOD);
+    Map<VarVersionPair, String> renames = current_meth.renamer.rename(typeNames);
     Map<VarVersionPair, LVTVariable> lvts = new HashMap<VarVersionPair, LVTVariable>();
+
     for (Entry<VarVersionPair, VarInfo> e : types.entrySet()) {
-      if (e.getValue().lvt != null) {
-        lvts.put(e.getKey(), e.getValue().lvt);
+      VarVersionPair idx = e.getKey();
+      // skip this. we can't rename it
+      if (idx.var == 0 && !mt.hasModifier(CodeConstants.ACC_STATIC)) {
+        continue;
+      }
+      LVTVariable lvt = e.getValue().lvt;
+      if (renames!=null) {
+        varproc.setVarName(idx, renames.get(idx));
+      }
+      if (lvt != null) {
+        if (renames!=null) {
+          lvt = lvt.rename(renames.get(idx));
+        }
+        varproc.setVarLVT(idx, lvt);
+        lvts.put(idx, lvt);
       }
     }
 
@@ -508,14 +521,21 @@ public class VarDefinitionHelper {
     String cast;
     private VarInfo(LVTVariable lvt, VarType type) {
       if (lvt != null && lvt.getSig() != null) {
-        cast = ExprProcessor.getCastTypeName(GenericType.parse(lvt.getSig()));
+        cast = ExprProcessor.getCastTypeName(GenericType.parse(lvt.getSig()),false);
       }
       else if (lvt != null) {
-        cast = ExprProcessor.getCastTypeName(lvt.getVarType());
+        cast = ExprProcessor.getCastTypeName(lvt.getVarType(),false);
+      }
+      else if (type != null) {
+        cast = ExprProcessor.getCastTypeName(type,false);
       }
       else {
-        cast = ExprProcessor.getCastTypeName(type);
+        cast = "this";
       }
+      this.lvt = lvt;
+    }
+    public String typeName() {
+      return cast;
     }
   }
 

@@ -18,6 +18,7 @@ package org.jetbrains.java.decompiler.struct;
 import org.jetbrains.java.decompiler.code.*;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
+import org.jetbrains.java.decompiler.main.extern.IVariableNameProvider;
 import org.jetbrains.java.decompiler.struct.attr.StructGeneralAttribute;
 import org.jetbrains.java.decompiler.struct.attr.StructGenericSignatureAttribute;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
@@ -60,6 +61,7 @@ public class StructMethod extends StructMember {
   private InstructionSequence seq;
   private boolean expanded = false;
   private VBStyleCollection<StructGeneralAttribute, String> codeAttributes;
+  public final IVariableNameProvider renamer;
 
   public StructMethod(DataInputFullStream in, StructClass clStruct) throws IOException {
     classStruct = clStruct;
@@ -78,6 +80,7 @@ public class StructMethod extends StructMember {
       attributes.addAllWithKey(codeAttributes);
       codeAttributes = null;
     }
+    this.renamer = DecompilerContext.getNamingFactory().createFactory(this);
   }
 
   @Override

@@ -59,4 +59,5 @@ public class LVTTest extends SingleClassesTestBase {
 //  @Test public void testMCAbstractResourcePack() { doTest("net/minecraft/client/resources/AbstractResourcePack"); }
 //  @Test public void testMCGuiShareToLan() { doTest("net/minecraft/client/gui/GuiShareToLan"); }
 //  @Test public void testMCContainerPlayer() { doTest("net/minecraft/inventory/ContainerPlayer"); }
+  @Test public void testMCContainerPlayer() { doTest("net/minecraft/inventory/ContainerPlayer"); }
 }

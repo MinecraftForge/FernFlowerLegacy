@@ -577,7 +577,7 @@ public class NestedClassProcessor {
     for (final MethodWrapper meth : child.getWrapper().getMethods()) {
 
       if (meth.root != null) { // neither abstract nor native
-
+        if (encmeth != null) { meth.methodStruct.renamer.addParentContext(encmeth.methodStruct.renamer); }
         // local var names
         HashMap<VarVersionPair, String> mapNewNames = new HashMap<VarVersionPair, String>();
         // local var types

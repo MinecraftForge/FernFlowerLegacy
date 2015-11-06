@@ -732,7 +732,7 @@ public class ClassWriter {
             buffer.append(' ');
             String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
             if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0) {
-                parameterName = renameParameterIfPossible(parameterName, index, methodWrapper, flags);
+                parameterName = methodWrapper.methodStruct.renamer.renameAbstractParameter(parameterName);
             }
             buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
 
@@ -839,13 +839,7 @@ public class ClassWriter {
     return !hideMethod;
   }
 
-  private String renameParameterIfPossible(String parameterName, int index, MethodWrapper methodWrapper, int flags) {
-    if (DecompilerContext.getProperty("abstractparamrenamer")==null) return parameterName;
-    IAbstractParameterRenamer property = (IAbstractParameterRenamer) DecompilerContext.getProperty("abstractparamrenamer");
-    return property.renameParameter(parameterName, index, methodWrapper, flags);
-}
-
-private static void mapLines(TextBuffer code, StructLineNumberTableAttribute table, BytecodeMappingTracer tracer, int startLine) {
+  private static void mapLines(TextBuffer code, StructLineNumberTableAttribute table, BytecodeMappingTracer tracer, int startLine) {
     // build line start offsets map
     HashMap<Integer, Set<Integer>> lineStartOffsets = new HashMap<Integer, Set<Integer>>();
     for (Map.Entry<Integer, Integer> entry : tracer.getMapping().entrySet()) {

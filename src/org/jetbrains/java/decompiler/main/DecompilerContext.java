@@ -21,8 +21,10 @@ import org.jetbrains.java.decompiler.main.collectors.ImportCollector;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
+import org.jetbrains.java.decompiler.main.extern.IVariableNamingFactory;
 import org.jetbrains.java.decompiler.modules.renamer.PoolInterceptor;
 import org.jetbrains.java.decompiler.struct.StructContext;
+import org.jetbrains.java.decompiler.util.JADNameProvider;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -36,6 +38,7 @@ public class DecompilerContext {
   public static final String CURRENT_METHOD_DESCRIPTOR = "CURRENT_METHOD_DESCRIPTOR";
   public static final String CURRENT_METHOD_WRAPPER = "CURRENT_METHOD_WRAPPER";
   public static final String CURRENT_VAR_PROCESSOR = "CURRENT_VAR_PROCESSOR";
+  public static final String RENAMER_FACTORY = "RENAMER_FACTORY";
 
   private static final ThreadLocal<DecompilerContext> currentContext = new ThreadLocal<DecompilerContext>();
 
@@ -48,6 +51,7 @@ public class DecompilerContext {
   private PoolInterceptor poolInterceptor;
   private IFernflowerLogger logger;
   private BytecodeSourceMapper bytecodeSourceMapper;
+  private IVariableNamingFactory renamerFactory;
 
   private DecompilerContext(Map<String, Object> properties) {
     this.properties = properties;
@@ -59,6 +63,17 @@ public class DecompilerContext {
       properties.putAll(propertiesCustom);
     }
     currentContext.set(new DecompilerContext(properties));
+    // Default a no-op renamer factory if none is provided
+    if (DecompilerContext.getProperty(RENAMER_FACTORY) != null) {
+      try {
+        currentContext.get().renamerFactory = Class.forName((String) DecompilerContext.getProperty(RENAMER_FACTORY)).asSubclass(IVariableNamingFactory.class).newInstance();
+      } catch (Exception e) {
+
+      }
+    }
+    if (DecompilerContext.getNamingFactory() == null) {
+      currentContext.get().renamerFactory = new JADNameProvider.JADNameProviderFactory();
+    }
   }
 
   public static DecompilerContext getCurrentContext() {
@@ -139,6 +154,10 @@ public class DecompilerContext {
 
   public static IFernflowerLogger getLogger() {
     return getCurrentContext().logger;
+  }
+
+  public static IVariableNamingFactory getNamingFactory() {
+      return getCurrentContext().renamerFactory;
   }
 
   public static void setLogger(IFernflowerLogger logger) {
