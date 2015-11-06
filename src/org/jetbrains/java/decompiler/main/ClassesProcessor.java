@@ -335,13 +335,6 @@ public class ClassesProcessor {
     node.wrapper = wrapper;
 
     for (ClassNode nd : node.nested) {
-      // Stuff the parent context into enclosed child methods
-      if (nd.enclosingMethod != null) {
-        MethodWrapper encmeth = wrapper.getMethods().getWithKey(nd.enclosingMethod);
-        for (final MethodWrapper meth : nd.getWrapper().getMethods()) {
-          meth.methodStruct.renamer.addParentContext(encmeth.methodStruct.renamer);
-        }
-      }
       initWrappers(nd);
     }
   }

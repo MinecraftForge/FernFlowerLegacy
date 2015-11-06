@@ -16,14 +16,16 @@
 package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.main.ClassesProcessor.ClassNode;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
-import org.jetbrains.java.decompiler.main.rels.MethodWrapper;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.ConstExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
+import org.jetbrains.java.decompiler.modules.decompiler.exps.NewExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
+import org.jetbrains.java.decompiler.modules.decompiler.sforms.DirectGraph.ExprentIterator;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchAllStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.CatchStatement;
 import org.jetbrains.java.decompiler.modules.decompiler.stats.DoStatement;
@@ -34,6 +36,7 @@ import org.jetbrains.java.decompiler.struct.StructMethod;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
+import org.jetbrains.java.decompiler.util.StatementIterator;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -433,9 +436,11 @@ public class VarDefinitionHelper {
     }
 
     for (VarType var : md.params) {
-      List<LVTVariable> vars = varproc.getLVT().getCandidates(index);
-      if (vars != null) {
-        types.put(new VarVersionPair(index, 0), new VarInfo(null,null));
+      if (varproc.getLVT() != null) {
+        List<LVTVariable> vars = varproc.getLVT().getCandidates(index);
+        if (vars != null) {
+          types.put(new VarVersionPair(index, 0), new VarInfo(null,null));
+        }
       }
       index += var.stackSize;
     }
@@ -446,8 +451,36 @@ public class VarDefinitionHelper {
     for (Entry<VarVersionPair, VarInfo> e : types.entrySet()) {
       typeNames.put(e.getKey(), e.getValue().typeName());
     }
-    StructMethod current_meth = (StructMethod)DecompilerContext.getProperty(DecompilerContext.CURRENT_METHOD);
+    final StructMethod current_meth = (StructMethod)DecompilerContext.getProperty(DecompilerContext.CURRENT_METHOD);
     Map<VarVersionPair, String> renames = current_meth.renamer.rename(typeNames);
+
+    // Stuff the parent context into enclosed child methods
+    StatementIterator.iterate(root, new ExprentIterator(){
+      @Override
+      public int processExprent(Exprent exprent){
+        ClassNode child = null;
+        if (exprent.type == Exprent.EXPRENT_VAR) {
+          VarExprent var = (VarExprent)exprent;
+          if (var.isClassDef()) {
+            child = DecompilerContext.getClassProcessor().getMapRootClasses().get(var.getVarType().value);
+          }
+        }
+        else if (exprent.type == Exprent.EXPRENT_NEW) {
+          NewExprent _new = (NewExprent)exprent;
+          if (_new.isAnonymous()) { //TODO: Check for Lambda here?
+            child = DecompilerContext.getClassProcessor().getMapRootClasses().get(_new.getNewType().value);
+          }
+        }
+
+        if (child != null) {
+          for (StructMethod meth : child.classStruct.getMethods()) {
+            meth.renamer.addParentContext(current_meth.renamer);
+          }
+        }
+        return 0;
+      }
+    });
+
     Map<VarVersionPair, LVTVariable> lvts = new HashMap<VarVersionPair, LVTVariable>();
 
     for (Entry<VarVersionPair, VarInfo> e : types.entrySet()) {

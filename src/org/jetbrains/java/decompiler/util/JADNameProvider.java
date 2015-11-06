@@ -25,13 +25,13 @@ public class JADNameProvider implements IVariableNameProvider {
 
     public JADNameProvider(StructMethod wrapper) {
       last = new HashMap<String, Holder>();
-      last.put("int",       new Holder(0, true,  "i", "j", "k", "l"));
-      last.put("byte",       new Holder(0, false, "b"       ));
-      last.put("char",       new Holder(0, false, "c"       ));
-      last.put("short",       new Holder(1, false, "short"   ));
-      last.put("boolean",       new Holder(0, true,  "flag"    ));
-      last.put("double",       new Holder(0, false, "d"       ));
-      last.put("float",       new Holder(0, true,  "f"       ));
+      last.put("int",     new Holder(0, true,  "i", "j", "k", "l"));
+      last.put("byte",    new Holder(0, false, "b"       ));
+      last.put("char",    new Holder(0, false, "c"       ));
+      last.put("short",   new Holder(1, false, "short"   ));
+      last.put("boolean", new Holder(0, true,  "flag"    ));
+      last.put("double",  new Holder(0, false, "d"       ));
+      last.put("float",   new Holder(0, true,  "f"       ));
       last.put("File",    new Holder(1, true,  "file"    ));
       last.put("String",  new Holder(0, true,  "s"       ));
       last.put("Class",   new Holder(0, true,  "oclass"  ));
