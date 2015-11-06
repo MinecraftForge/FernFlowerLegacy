@@ -68,11 +68,15 @@ public class DecompilerContext {
       try {
         currentContext.get().renamerFactory = Class.forName((String) DecompilerContext.getProperty(RENAMER_FACTORY)).asSubclass(IVariableNamingFactory.class).newInstance();
       } catch (Exception e) {
-
+        getLogger().writeMessage("Error loading renamer factory class", e);
       }
     }
     if (DecompilerContext.getNamingFactory() == null) {
-      currentContext.get().renamerFactory = new JADNameProvider.JADNameProviderFactory();
+      if (DecompilerContext.getOption(IFernflowerPreferences.USE_JAD_VARNAMING)) {
+        currentContext.get().renamerFactory = new JADNameProvider.JADNameProviderFactory();
+      } else {
+        currentContext.get().renamerFactory = new IdentityRenamerFactory();
+      }
     }
   }
 

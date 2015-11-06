@@ -18,7 +18,6 @@ package org.jetbrains.java.decompiler.main;
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.ClassesProcessor.ClassNode;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
-import org.jetbrains.java.decompiler.main.extern.IAbstractParameterRenamer;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.main.rels.ClassWrapper;
