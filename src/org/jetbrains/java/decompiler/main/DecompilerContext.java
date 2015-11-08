@@ -57,19 +57,19 @@ public class DecompilerContext {
     this.properties = properties;
   }
 
-  public static void initContext(Map<String, Object> propertiesCustom) {
+  public static void initContext(Map<String, Object> propertiesCustom, IFernflowerLogger logger) {
     Map<String, Object> properties = new HashMap<String, Object>(IFernflowerPreferences.DEFAULTS);
     if (propertiesCustom != null) {
       properties.putAll(propertiesCustom);
     }
     currentContext.set(new DecompilerContext(properties));
+    setLogger(logger);
     // Default a no-op renamer factory if none is provided
     if (DecompilerContext.getProperty(RENAMER_FACTORY) != null) {
       try {
         currentContext.get().renamerFactory = Class.forName((String) DecompilerContext.getProperty(RENAMER_FACTORY)).asSubclass(IVariableNamingFactory.class).newInstance();
       } catch (Exception e) {
-        e.printStackTrace();
-        System.err.println("Error loading renamer factory class");
+        getLogger().writeMessage("Error loading renamer factory class", e);
       }
     }
     if (DecompilerContext.getNamingFactory() == null) {
