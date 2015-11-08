@@ -179,7 +179,7 @@ public class JADNameProvider implements IVariableNameProvider {
     }
 
     @Override
-    public String renameAbstractParameter(String abstractParam) {
+    public String renameAbstractParameter(String abstractParam, int index) {
       return abstractParam;
     }
 

@@ -14,7 +14,7 @@ public class IdentityRenamerFactory implements IVariableNamingFactory, IVariable
   }
 
   @Override
-  public String renameAbstractParameter(String abstractParam) {
+  public String renameAbstractParameter(String abstractParam, int index) {
     return abstractParam;
   }
 
