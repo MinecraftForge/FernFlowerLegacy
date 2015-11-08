@@ -68,7 +68,8 @@ public class DecompilerContext {
       try {
         currentContext.get().renamerFactory = Class.forName((String) DecompilerContext.getProperty(RENAMER_FACTORY)).asSubclass(IVariableNamingFactory.class).newInstance();
       } catch (Exception e) {
-        getLogger().writeMessage("Error loading renamer factory class", e);
+        e.printStackTrace();
+        System.err.println("Error loading renamer factory class");
       }
     }
     if (DecompilerContext.getNamingFactory() == null) {

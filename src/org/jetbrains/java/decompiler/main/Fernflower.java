@@ -41,6 +41,7 @@ public class Fernflower implements IDecompiledData {
 
   public Fernflower(IBytecodeProvider provider, IResultSaver saver, Map<String, Object> options, IFernflowerLogger logger) {
     structContext = new StructContext(saver, this, new LazyLoader(provider));
+    DecompilerContext.setLogger(logger);
     DecompilerContext.initContext(options);
     DecompilerContext.setCounterContainer(new CounterContainer());
     DecompilerContext.setLogger(logger);
