@@ -147,9 +147,6 @@ public class StructClass extends StructMember {
     if (loader != null) {
       pool = null;
     }
-    for (StructMethod m : methods) {
-        m.renamer = null;
-    }
   }
 
   public ConstantPool getPool() {
