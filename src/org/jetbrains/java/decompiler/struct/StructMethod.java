@@ -61,7 +61,7 @@ public class StructMethod extends StructMember {
   private InstructionSequence seq;
   private boolean expanded = false;
   private VBStyleCollection<StructGeneralAttribute, String> codeAttributes;
-  public IVariableNameProvider renamer;
+  private IVariableNameProvider renamer;
 
   public StructMethod(DataInputFullStream in, StructClass clStruct) throws IOException {
     classStruct = clStruct;
@@ -120,8 +120,14 @@ public class StructMethod extends StructMember {
     if (containsCode && !expanded) {
       byte[] code = classStruct.getLoader().loadBytecode(this, codeFullLength);
       seq = parseBytecode(new DataInputFullStream(code), codeLength, classStruct.getPool());
-      this.renamer = DecompilerContext.getNamingFactory().createFactory(this);
+      loadRenamer();
       expanded = true;
+    }
+  }
+
+  private void loadRenamer() {
+    if (this.renamer == null) {
+      this.renamer = DecompilerContext.getNamingFactory().createFactory(this);
     }
   }
 
@@ -407,5 +413,14 @@ public class StructMethod extends StructMember {
 
   public GenericMethodDescriptor getSignature() {
     return signature;
+  }
+
+  public IVariableNameProvider getRenamer() {
+    loadRenamer();
+    return renamer;
+  }
+
+  public void unloadRenamer() {
+    this.renamer = null;
   }
 }

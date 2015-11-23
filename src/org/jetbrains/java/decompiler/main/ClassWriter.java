@@ -731,7 +731,7 @@ public class ClassWriter {
             buffer.append(' ');
             String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
             if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0) {
-                parameterName = methodWrapper.methodStruct.renamer.renameAbstractParameter(parameterName, index);
+                parameterName = methodWrapper.methodStruct.getRenamer().renameAbstractParameter(parameterName, index);
             }
             buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
 

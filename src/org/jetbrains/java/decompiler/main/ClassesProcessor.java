@@ -355,7 +355,7 @@ public class ClassesProcessor {
     node.wrapper = null;
     node.classStruct.releaseResources();
     for (StructMethod m : node.classStruct.getMethods()) {
-        m.renamer = null;
+        m.unloadRenamer();
     }
 
     for (ClassNode nd : node.nested) {

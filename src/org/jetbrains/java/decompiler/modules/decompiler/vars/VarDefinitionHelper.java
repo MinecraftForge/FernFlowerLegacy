@@ -452,7 +452,7 @@ public class VarDefinitionHelper {
       typeNames.put(e.getKey(), e.getValue().typeName());
     }
     final StructMethod current_meth = (StructMethod)DecompilerContext.getProperty(DecompilerContext.CURRENT_METHOD);
-    Map<VarVersionPair, String> renames = current_meth.renamer.rename(typeNames);
+    Map<VarVersionPair, String> renames = current_meth.getRenamer().rename(typeNames);
 
     // Stuff the parent context into enclosed child methods
     StatementIterator.iterate(root, new ExprentIterator(){
@@ -474,7 +474,7 @@ public class VarDefinitionHelper {
 
         if (child != null) {
           for (StructMethod meth : child.classStruct.getMethods()) {
-            meth.renamer.addParentContext(current_meth.renamer);
+            meth.getRenamer().addParentContext(current_meth.getRenamer());
           }
         }
         return 0;
