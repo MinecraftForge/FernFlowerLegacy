@@ -80,7 +80,6 @@ public class StructMethod extends StructMember {
       attributes.addAllWithKey(codeAttributes);
       codeAttributes = null;
     }
-    this.renamer = DecompilerContext.getNamingFactory().createFactory(this);
   }
 
   @Override
@@ -121,6 +120,7 @@ public class StructMethod extends StructMember {
     if (containsCode && !expanded) {
       byte[] code = classStruct.getLoader().loadBytecode(this, codeFullLength);
       seq = parseBytecode(new DataInputFullStream(code), codeLength, classStruct.getPool());
+      this.renamer = DecompilerContext.getNamingFactory().createFactory(this);
       expanded = true;
     }
   }
