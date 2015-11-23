@@ -61,7 +61,7 @@ public class StructMethod extends StructMember {
   private InstructionSequence seq;
   private boolean expanded = false;
   private VBStyleCollection<StructGeneralAttribute, String> codeAttributes;
-  public final IVariableNameProvider renamer;
+  public IVariableNameProvider renamer;
 
   public StructMethod(DataInputFullStream in, StructClass clStruct) throws IOException {
     classStruct = clStruct;
