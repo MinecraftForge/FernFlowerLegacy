@@ -36,6 +36,7 @@ import org.jetbrains.java.decompiler.struct.StructMethod;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.gen.generics.GenericType;
+import org.jetbrains.java.decompiler.util.ExprentUtil;
 import org.jetbrains.java.decompiler.util.StatementIterator;
 
 import java.util.*;
@@ -572,7 +573,6 @@ public class VarDefinitionHelper {
     }
   }
 
-
   private void applyTypes(Statement stat, Map<VarVersionPair, LVTVariable> types) {
     if (stat == null || types.size() == 0) {
       return;
@@ -636,16 +636,12 @@ public class VarDefinitionHelper {
 
     Map<VarVersionPair, VarVersionPair> blacklist = new HashMap<VarVersionPair, VarVersionPair>();
     VPPEntry remap = mergeVars(stat, parent, new HashMap<Integer, VarVersionPair>(), blacklist);
-    VPPEntry last = remap;
     while (remap != null) {
       //System.out.println("Remapping: " + remap.getKey() + " -> " + remap.getValue());
       if (!remapVar(stat, remap.getKey(), remap.getValue())) {
         blacklist.put(remap.getKey(), remap.getValue());
       }
       remap = mergeVars(stat, parent, new HashMap<Integer, VarVersionPair>(), blacklist);
-      if (last.equals(remap)){
-        System.currentTimeMillis();
-      }
     }
     return null;
   }
@@ -681,7 +677,9 @@ public class VarDefinitionHelper {
     }
 
     if (stat.getExprents() == null) {
-      for (Object obj : stat.getSequentialObjects()) {
+      List<Object> objs = stat.getSequentialObjects();
+      for (int i = 0; i < objs.size(); i++) {
+        Object obj = objs.get(i);
         if (obj instanceof Statement) {
           Statement st = (Statement)obj;
 
@@ -736,16 +734,17 @@ public class VarDefinitionHelper {
         }
         else if (obj instanceof Exprent) {
           VPPEntry ret = processExprent((Exprent)obj, this_vars, scoped, blacklist);
-          if (ret != null) {
+          if (ret != null && !ExprentUtil.isVarReadFirst(ret.getValue(), stat, i + 1)) {
             return ret;
           }
         }
       }
     }
     else {
-      for (Exprent exp : stat.getExprents()) {
-        VPPEntry ret = processExprent(exp, this_vars, scoped, blacklist);
-        if (ret != null) {
+      List<Exprent> exps = stat.getExprents();
+      for (int i = 0; i < exps.size(); i++) {
+        VPPEntry ret = processExprent(exps.get(i), this_vars, scoped, blacklist);
+        if (ret != null && !ExprentUtil.isVarReadFirst(ret.getValue(), stat, i + 1)) {
           return ret;
         }
       }
